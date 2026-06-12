@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>EU vs EU | Jogo do Treino</title>
+<meta name="description" content="A única competição é contra quem você era ontem. Jogo de constância dos alunos do Lucas Lima.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<!-- Meta Pixel: Pixel Performix -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '264800457918824');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=264800457918824&ev=PageView&noscript=1"/></noscript>
+<style>
+:root{
+  --bg:#07040d;
+  --card:#130a26;
+  --card2:#1b0f33;
+  --borda:#2c1b52;
+  --roxo:#7c3aed;
+  --roxo2:#8b5cf6;
+  --roxo3:#a78bfa;
+  --ciano:#22d3ee;
+  --verde:#34d399;
+  --amarelo:#fbbf24;
+  --vermelho:#f87171;
+  --texto:#ede9fe;
+  --texto2:#9d8fc7;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  background:var(--bg);
+  color:var(--texto);
+  font-family:'Inter',system-ui,sans-serif;
+  min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124,58,237,.25), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(34,211,238,.06), transparent 70%);
+  background-attachment:fixed;
+}
+.wrap{max-width:520px;margin:0 auto;padding:20px 16px 90px}
+h1,h2,h3,.hud{font-family:'Chakra Petch',sans-serif}
+.hidden{display:none!important}
+
+/* ===== logo ===== */
+.logo{text-align:center;margin:14px 0 6px}
+.logo .vs{
+  font-family:'Chakra Petch';font-weight:700;font-size:42px;letter-spacing:2px;
+  background:linear-gradient(135deg,#a78bfa 0%,#7c3aed 55%,#22d3ee 130%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 18px rgba(124,58,237,.45));
+}
+.logo .tag{color:var(--texto2);font-size:13px;margin-top:2px}
+
+/* ===== cards ===== */
+.card{
+  background:linear-gradient(180deg,var(--card2) 0%,var(--card) 100%);
+  border:1px solid var(--borda);
+  border-radius:18px;
+  padding:18px;
+  margin-top:14px;
+}
+.card h3{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--roxo3);margin-bottom:12px}
+
+/* ===== botões ===== */
+.btn{
+  display:block;width:100%;border:none;cursor:pointer;
+  font-family:'Chakra Petch';font-weight:700;font-size:16px;letter-spacing:1px;
+  padding:16px;border-radius:14px;color:#fff;
+  background:linear-gradient(135deg,var(--roxo) 0%,var(--roxo2) 100%);
+  box-shadow:0 6px 24px rgba(124,58,237,.35);
+  transition:transform .1s;
+}
+.btn:active{transform:scale(.97)}
+.btn.fant{background:transparent;border:1px solid var(--borda);box-shadow:none;color:var(--texto2);font-weight:500}
+.btn.mini{width:auto;padding:10px 16px;font-size:13px;display:inline-block}
+.btn.verde{background:linear-gradient(135deg,#059669,#34d399);box-shadow:0 4px 16px rgba(52,211,153,.3)}
+.btn.verm{background:linear-gradient(135deg,#dc2626,#f87171);box-shadow:0 4px 16px rgba(248,113,113,.3)}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* ===== entrada ===== */
+.lista-alunos{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.aluno-btn{
+  text-align:left;padding:14px 16px;border-radius:12px;cursor:pointer;
+  background:var(--card2);border:1px solid var(--borda);color:var(--texto);
+  font-size:16px;font-weight:600;font-family:'Inter';
+}
+.aluno-btn:active{border-color:var(--roxo2)}
+input[type=text],input[type=password],input[type=number],textarea{
+  width:100%;padding:14px;border-radius:12px;border:1px solid var(--borda);
+  background:#0d0719;color:var(--texto);font-size:16px;font-family:'Inter';outline:none;
+}
+input:focus,textarea:focus{border-color:var(--roxo2)}
+
+/* ===== HUD nível ===== */
+.hud-nivel{display:flex;align-items:center;gap:14px}
+.badge-nivel{
+  width:68px;height:68px;flex:none;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:32px;
+  background:radial-gradient(circle at 30% 30%, #2b1758, #130a26);
+  border:2px solid var(--roxo2);
+  box-shadow:0 0 22px rgba(139,92,246,.5), inset 0 0 14px rgba(139,92,246,.25);
+}
+.hud-info{flex:1;min-width:0}
+.hud-info .nome-nivel{font-family:'Chakra Petch';font-weight:700;font-size:20px}
+.hud-info .xp-num{color:var(--texto2);font-size:12px;margin-top:2px}
+.xp-barra{height:14px;border-radius:99px;background:#0d0719;border:1px solid var(--borda);margin-top:8px;overflow:hidden}
+.xp-fill{
+  height:100%;border-radius:99px;width:0%;
+  background:linear-gradient(90deg,var(--roxo) 0%,var(--roxo3) 60%,var(--ciano) 110%);
+  box-shadow:0 0 12px rgba(139,92,246,.7);
+  transition:width 1s cubic-bezier(.2,.8,.2,1);
+}
+
+/* ===== stats ===== */
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px}
+.stat{
+  background:linear-gradient(180deg,var(--card2),var(--card));
+  border:1px solid var(--borda);border-radius:16px;padding:14px 8px;text-align:center;
+}
+.stat .ico{font-size:24px}
+.stat .val{font-family:'Chakra Petch';font-weight:700;font-size:22px;margin-top:2px}
+.stat .lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--texto2);margin-top:2px}
+
+/* ===== hábitos ===== */
+.habito{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;
+  background:#0d0719;border:1px solid var(--borda);margin-top:8px;cursor:pointer;
+}
+.habito .check{
+  width:26px;height:26px;flex:none;border-radius:8px;border:2px solid var(--borda);
+  display:flex;align-items:center;justify-content:center;font-size:15px;color:transparent;
+}
+.habito.feito{border-color:rgba(52,211,153,.4)}
+.habito.feito .check{background:rgba(52,211,153,.15);border-color:var(--verde);color:var(--verde)}
+.habito .h-nome{flex:1;font-size:15px;font-weight:600}
+.habito.feito .h-nome{color:var(--texto2);text-decoration:line-through}
+.habito .h-pts{font-family:'Chakra Petch';font-size:13px;color:var(--ciano)}
+
+/* ===== medalhas ===== */
+.medalhas{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.medalha{
+  aspect-ratio:1;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:#0d0719;border:1px solid var(--borda);font-size:24px;position:relative;
+}
+.medalha.ganha{
+  background:radial-gradient(circle at 50% 30%, rgba(251,191,36,.18), #130a26);
+  border-color:rgba(251,191,36,.5);
+  box-shadow:0 0 14px rgba(251,191,36,.2);
+}
+.medalha.bloq{filter:grayscale(1);opacity:.35}
+.medalha small{font-size:7px;color:var(--texto2);text-align:center;padding:0 2px;margin-top:2px;line-height:1.2}
+
+/* ===== histórico / pendentes ===== */
+.reg{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(44,27,82,.5)}
+.reg:last-child{border-bottom:none}
+.reg .r-ico{font-size:20px;flex:none}
+.reg .r-txt{flex:1;min-width:0;font-size:13px}
+.reg .r-txt b{display:block;font-size:14px}
+.reg .r-txt span{color:var(--texto2);font-size:12px}
+.chip{font-size:10px;font-weight:800;letter-spacing:1px;padding:4px 9px;border-radius:99px;text-transform:uppercase;flex:none}
+.chip.pendente{background:rgba(251,191,36,.12);color:var(--amarelo);border:1px solid rgba(251,191,36,.35)}
+.chip.aprovado{background:rgba(52,211,153,.12);color:var(--verde);border:1px solid rgba(52,211,153,.35)}
+.chip.rejeitado{background:rgba(248,113,113,.12);color:var(--vermelho);border:1px solid rgba(248,113,113,.35)}
+
+/* ===== missão ===== */
+.missao-pts{
+  font-family:'Chakra Petch';font-weight:700;color:var(--ciano);font-size:14px;
+}
+
+/* ===== modal ===== */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(4,2,10,.85);backdrop-filter:blur(6px);
+  display:flex;align-items:flex-end;justify-content:center;z-index:50;
+}
+.modal{
+  width:100%;max-width:520px;background:linear-gradient(180deg,#1b0f33,#130a26);
+  border:1px solid var(--borda);border-bottom:none;border-radius:22px 22px 0 0;
+  padding:22px 18px 30px;
+}
+.modal h2{font-size:18px;margin-bottom:6px}
+.modal p{color:var(--texto2);font-size:13px;margin-bottom:14px}
+.foto-prev{width:100%;border-radius:14px;margin:10px 0;display:block;max-height:300px;object-fit:cover}
+.foto-drop{
+  border:2px dashed var(--borda);border-radius:14px;padding:26px;text-align:center;color:var(--texto2);
+  font-size:14px;cursor:pointer;margin:10px 0;
+}
+
+/* ===== toast ===== */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);
+  background:#1b0f33;border:1px solid var(--roxo2);color:var(--texto);
+  padding:13px 22px;border-radius:99px;font-size:14px;font-weight:600;z-index:99;
+  box-shadow:0 8px 30px rgba(124,58,237,.4);transition:transform .3s;max-width:88vw;text-align:center;
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ===== painel treinador ===== */
+.abas{display:flex;gap:6px;margin-top:16px;overflow-x:auto;padding-bottom:4px}
+.aba{
+  flex:none;padding:9px 15px;border-radius:99px;font-family:'Chakra Petch';font-weight:700;font-size:12px;
+  letter-spacing:1px;background:transparent;border:1px solid var(--borda);color:var(--texto2);cursor:pointer;
+}
+.aba.ativa{background:var(--roxo);border-color:var(--roxo);color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.4)}
+.foto-mini{width:54px;height:54px;border-radius:10px;object-fit:cover;flex:none;cursor:pointer;border:1px solid var(--borda)}
+.acoes-val{display:flex;gap:8px;margin-top:10px}
+.acoes-val .btn{padding:11px;font-size:13px}
+.aluno-resumo{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(44,27,82,.5)}
+.aluno-resumo:last-child{border-bottom:none}
+.aluno-resumo .ar-badge{font-size:26px;flex:none}
+.aluno-resumo .ar-info{flex:1;min-width:0}
+.aluno-resumo .ar-info b{font-size:15px}
+.aluno-resumo .ar-info span{display:block;color:var(--texto2);font-size:12px;margin-top:2px}
+.aluno-resumo .ar-pts{font-family:'Chakra Petch';font-weight:700;color:var(--ciano);font-size:16px;flex:none}
+.linha-form{display:flex;gap:8px;margin-top:8px}
+.rodape{color:var(--texto2);text-align:center;font-size:11px;margin-top:26px;line-height:1.6}
+.rodape a{color:var(--roxo3);text-decoration:none}
+.atualizando{font-size:11px;color:var(--texto2);text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===================== TELA ENTRADA ===================== -->
+  <div id="tela-entrada" class="hidden">
+    <div class="logo">
+      <div class="vs">EU vs EU</div>
+      <div class="tag">A única competição é contra quem você era ontem.</div>
+    </div>
+    <div class="card">
+      <h3>Quem está treinando?</h3>
+      <div id="lista-alunos" class="lista-alunos"></div>
+    </div>
+    <div class="card">
+      <h3>Primeira vez aqui?</h3>
+      <input type="text" id="novo-nome" placeholder="Seu nome" maxlength="40">
+      <div style="height:10px"></div>
+      <button class="btn" onclick="criarAluno()">COMEÇAR O JOGO</button>
+    </div>
+    <div class="rodape">Jogo dos alunos do Lucas Lima · @personaltrainerlucaslima</div>
+  </div>
+
+  <!-- ===================== TELA JOGO (ALUNO) ===================== -->
+  <div id="tela-jogo" class="hidden">
+    <div class="logo">
+      <div class="vs" style="font-size:30px">EU vs EU</div>
+    </div>
+
+    <div class="card">
+      <div class="hud-nivel">
+        <div class="badge-nivel" id="badge-nivel">🌱</div>
+        <div class="hud-info">
+          <div class="nome-nivel" id="nome-nivel">Novato</div>
+          <div class="xp-num" id="xp-num"></div>
+          <div class="xp-barra"><div class="xp-fill" id="xp-fill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="ico">🔥</div><div class="val" id="st-streak">0</div><div class="lbl">semanas seguidas</div></div>
+      <div class="stat"><div class="ico">🏋️</div><div class="val" id="st-treinos">0/3</div><div class="lbl">treinos na semana</div></div>
+      <div class="stat"><div class="ico">⚡</div><div class="val" id="st-pontos">0</div><div class="lbl">XP na semana</div></div>
+    </div>
+
+    <div class="card">
+      <h3>Treino de hoje</h3>
+      <div id="treino-hoje"></div>
+    </div>
+
+    <div class="card">
+      <h3>Hábitos de hoje</h3>
+      <div id="lista-habitos"></div>
+    </div>
+
+    <div class="card" id="card-missoes">
+      <h3>Missão da semana</h3>
+      <div id="lista-missoes"></div>
+    </div>
+
+    <div class="card">
+      <h3>Minhas medalhas</h3>
+      <div class="medalhas" id="grade-medalhas"></div>
+    </div>
+
+    <div class="card">
+      <h3>Histórico</h3>
+      <div id="historico"></div>
+    </div>
+
+    <button class="btn fant" style="margin-top:16px" onclick="sairAluno()">Trocar de atleta</button>
+    <div class="rodape">Treinos e missões valem XP depois que o Lucas confere a prova. 💪<br>@personaltrainerlucaslima</div>
+  </div>
+
+  <!-- ===================== TELA TREINADOR: CHAVE ===================== -->
+  <div id="tela-chave" class="hidden">
+    <div class="logo">
+      <div class="vs" style="font-size:30px">EU vs EU</div>
+      <div class="tag">Painel do treinador</div>
+    </div>
+    <div class="card">
+      <h3>Chave do treinador</h3>
+      <input type="password" id="input-chave" placeholder="Digite a chave">
+      <div style="height:10px"></div>
+      <button class="btn" onclick="entrarTreinador()">ENTRAR</button>
+    </div>
+  </div>
+
+  <!-- ===================== TELA TREINADOR: PAINEL ===================== -->
+  <div id="tela-painel" class="hidden">
+    <div class="logo">
+      <div class="vs" style="font-size:26px">EU vs EU</div>
+      <div class="tag">Painel do treinador</div>
+    </div>
+    <div class="abas">
+      <button class="aba ativa" data-aba="pendentes" onclick="trocarAba('pendentes')">✋ Validar</button>
+      <button class="aba" data-aba="alunos" onclick="trocarAba('alunos')">👥 Alunos</button>
+      <button class="aba" data-aba="missoes" onclick="trocarAba('missoes')">🎯 Missões</button>
+      <button class="aba" data-aba="habitos" onclick="trocarAba('habitos')">✅ Hábitos</button>
+    </div>
+
+    <div id="aba-pendentes">
+      <div class="card"><h3>Aguardando validação</h3><div id="painel-pendentes"></div></div>
+    </div>
+    <div id="aba-alunos" class="hidden">
+      <div class="card"><h3>Visão geral dos atletas</h3><div id="painel-alunos"></div></div>
+    </div>
+    <div id="aba-missoes" class="hidden">
+      <div class="card"><h3>Nova missão da semana</h3>
+        <input type="text" id="m-titulo" placeholder="Título (ex: Semana sem falhar)">
+        <div style="height:8px"></div>
+        <textarea id="m-desc" rows="2" placeholder="Descrição curta"></textarea>
+        <div class="linha-form">
+          <input type="number" id="m-pontos" placeholder="XP" value="50" style="width:90px">
+          <button class="btn mini" onclick="criarMissao()">CRIAR</button>
+        </div>
+      </div>
+      <div class="card"><h3>Missões</h3><div id="painel-missoes"></div></div>
+    </div>
+    <div id="aba-habitos" class="hidden">
+      <div class="card"><h3>Novo hábito diário</h3>
+        <div class="linha-form" style="margin-top:0">
+          <input type="text" id="h-emoji" placeholder="🙂" maxlength="4" style="width:64px;text-align:center">
+          <input type="text" id="h-nome" placeholder="Nome do hábito">
+        </div>
+        <div class="linha-form">
+          <input type="number" id="h-pontos" placeholder="XP" value="5" style="width:90px">
+          <button class="btn mini" onclick="criarHabito()">CRIAR</button>
+        </div>
+      </div>
+      <div class="card"><h3>Hábitos</h3><div id="painel-habitos"></div></div>
+    </div>
+
+    <div class="atualizando">Atualiza sozinho a cada 30 segundos.</div>
+    <button class="btn fant" style="margin-top:10px" onclick="sairTreinador()">Sair do painel</button>
+  </div>
+
+  <!-- ===================== MODAL FOTO ===================== -->
+  <div id="modal-foto" class="modal-bg hidden">
+    <div class="modal">
+      <h2 id="modal-titulo">Prova do treino 📸</h2>
+      <p id="modal-sub">Manda uma foto sua na academia, do espelho, do aparelho, do suor no chão. O Lucas confere e libera o XP.</p>
+      <input type="file" id="input-foto" accept="image/*" capture="environment" class="hidden">
+      <div class="foto-drop" id="foto-drop" onclick="document.getElementById('input-foto').click()">📷 Toque para tirar ou escolher a foto</div>
+      <img id="foto-prev" class="foto-prev hidden" alt="prova">
+      <button class="btn" id="btn-enviar" onclick="enviarCheckin()" disabled>ENVIAR PRA VALIDAÇÃO</button>
+      <div style="height:8px"></div>
+      <button class="btn fant" onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+/* ================== CONFIG ================== */
+const SUPA = 'https://tgmzleagedfjvyadkgbq.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnbXpsZWFnZWRmanZ5YWRrZ2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODc2MjMsImV4cCI6MjA5Njg2MzYyM30.BSd_lUTcJy2EQh8s312I4uX9vQdxgGlEXF7o6bHxGj4';
+const PONTOS_TREINO = 20;
+const META_SEMANA = 3;
+const NIVEIS = [
+  {xp:0,    nome:'Novato',       icone:'🌱'},
+  {xp:100,  nome:'Iniciado',     icone:'🔰'},
+  {xp:250,  nome:'Consistente',  icone:'🔥'},
+  {xp:450,  nome:'Disciplinado', icone:'🛡️'},
+  {xp:700,  nome:'Imparável',    icone:'⚡'},
+  {xp:1000, nome:'Elite',        icone:'💎'},
+  {xp:1500, nome:'Lenda',        icone:'👑'},
+];
+
+/* ================== API ================== */
+async function api(path, opts = {}) {
+  const r = await fetch(SUPA + path, Object.assign({}, opts, {
+    headers: Object.assign({
+      'apikey': ANON,
+      'Authorization': 'Bearer ' + ANON,
+      'Content-Type': 'application/json'
+    }, opts.headers || {})
+  }));
+  const txt = await r.text();
+  if (!r.ok) { let m = txt; try { m = JSON.parse(txt).message || txt } catch(e){} throw new Error(m); }
+  return txt ? JSON.parse(txt) : null;
+}
+function rpc(fn, args) {
+  return api('/rest/v1/rpc/' + fn, { method:'POST', body: JSON.stringify(args) });
+}
+
+/* ================== HELPERS ================== */
+function $(id){ return document.getElementById(id) }
+function esc(s){ const d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML }
+function toast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('show'), 2800);
+}
+function hojeISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0') }
+function inicioSemana(data){ // segunda-feira
+  const d = new Date(data + 'T12:00:00');
+  const dia = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - dia);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function semanaAnterior(seg){
+  const d = new Date(seg + 'T12:00:00'); d.setDate(d.getDate()-7);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function dataBR(iso){ const p=iso.split('-'); return p[2]+'/'+p[1] }
+function mostrarTela(id){
+  ['tela-entrada','tela-jogo','tela-chave','tela-painel'].forEach(t => $(t).classList.add('hidden'));
+  $(id).classList.remove('hidden');
+}
+
+/* ================== ESTADO ================== */
+let aluno = null;       // {id, nome}
+let meusCheckins = [];
+let habitos = [];
+let missoes = [];
+let modalCtx = null;    // {tipo, detalhe, pontos, blob}
+
+/* ================== ENTRADA / ROTEAMENTO ================== */
+async function iniciar(){
+  if (location.hash === '#treinador') {
+    const chave = localStorage.getItem('euvseu_chave');
+    if (chave) { mostrarTela('tela-painel'); carregarPainel(); }
+    else mostrarTela('tela-chave');
+    return;
+  }
+  const salvo = localStorage.getItem('euvseu_aluno');
+  if (salvo) {
+    aluno = JSON.parse(salvo);
+    mostrarTela('tela-jogo');
+    carregarJogo();
+  } else {
+    mostrarTela('tela-entrada');
+    carregarEntrada();
+  }
+}
+window.addEventListener('hashchange', iniciar);
+
+async function carregarEntrada(){
+  try {
+    const alunos = await api('/rest/v1/alunos?select=id,nome&order=nome.asc');
+    $('lista-alunos').innerHTML = alunos.length
+      ? alunos.map(a => `<button class="aluno-btn" onclick='escolherAluno(${JSON.stringify(JSON.stringify(a))})'>💪 ${esc(a.nome)}</button>`).join('')
+      : '<div style="color:var(--texto2);font-size:14px">Ainda não tem ninguém jogando. Seja o primeiro! 👇</div>';
+  } catch(e){ toast('Erro ao carregar: ' + e.message) }
+}
+function escolherAluno(json){
+  aluno = JSON.parse(json);
+  localStorage.setItem('euvseu_aluno', JSON.stringify(aluno));
+  mostrarTela('tela-jogo'); carregarJogo();
+}
+async function criarAluno(){
+  const nome = $('novo-nome').value.trim();
+  if (!nome) return toast('Escreve seu nome primeiro 😉');
+  try {
+    const r = await api('/rest/v1/alunos', {
+      method:'POST', headers:{'Prefer':'return=representation'},
+      body: JSON.stringify({nome})
+    });
+    escolherAluno(JSON.stringify({id:r[0].id, nome:r[0].nome}));
+    toast('Bem-vindo ao jogo, ' + nome + '! 🎮');
+  } catch(e){ toast('Erro: ' + e.message) }
+}
+function sairAluno(){
+  localStorage.removeItem('euvseu_aluno'); aluno=null;
+  mostrarTela('tela-entrada'); carregarEntrada();
+}
+
+/* ================== JOGO DO ALUNO ================== */
+async function carregarJogo(){
+  try {
+    [meusCheckins, habitos, missoes] = await Promise.all([
+      api('/rest/v1/checkins?aluno_id=eq.' + aluno.id + '&select=*&order=criado_em.desc&limit=400'),
+      api('/rest/v1/habitos?ativo=eq.true&select=*&order=id.asc'),
+      api('/rest/v1/missoes?ativa=eq.true&select=*&order=id.desc')
+    ]);
+    desenharJogo();
+  } catch(e){ toast('Erro ao carregar: ' + e.message) }
+}
+
+function aprovados(){ return meusCheckins.filter(c => c.status === 'aprovado') }
+
+function calcStreak(){
+  const porSemana = {};
+  aprovados().filter(c => c.tipo === 'treino').forEach(c => {
+    const s = inicioSemana(c.data); porSemana[s] = (porSemana[s]||0) + 1;
+  });
+  // conta também treinos ainda pendentes da semana atual? Não: streak só com aprovados.
+  let streak = 0;
+  let sem = inicioSemana(hojeISO());
+  if ((porSemana[sem]||0) >= META_SEMANA) { streak++; }
+  sem = semanaAnterior(sem);
+  while ((porSemana[sem]||0) >= META_SEMANA) { streak++; sem = semanaAnterior(sem); }
+  return streak;
+}
+
+function calcMedalhas(){
+  const ap = aprovados();
+  const treinos = ap.filter(c=>c.tipo==='treino').length;
+  const missoesOk = ap.filter(c=>c.tipo==='missao').length;
+  const diasHabito = new Set(ap.filter(c=>c.tipo==='habito').map(c=>c.data)).size;
+  const xp = ap.reduce((s,c)=>s+c.pontos,0);
+  const streak = calcStreak();
+  return [
+    {ico:'🥇', nome:'1º treino',    ok: treinos>=1},
+    {ico:'🔟', nome:'10 treinos',   ok: treinos>=10},
+    {ico:'💪', nome:'25 treinos',   ok: treinos>=25},
+    {ico:'🦾', nome:'50 treinos',   ok: treinos>=50},
+    {ico:'🏆', nome:'100 treinos',  ok: treinos>=100},
+    {ico:'🔥', nome:'4 sem. seguidas',  ok: streak>=4},
+    {ico:'🚀', nome:'12 sem. seguidas', ok: streak>=12},
+    {ico:'🎯', nome:'1ª missão',    ok: missoesOk>=1},
+    {ico:'💧', nome:'7 dias de hábitos', ok: diasHabito>=7},
+    {ico:'👑', nome:'1000 XP',      ok: xp>=1000},
+  ];
+}
+
+function desenharJogo(){
+  const ap = aprovados();
+  const xp = ap.reduce((s,c)=>s+c.pontos,0);
+
+  // nível
+  let nivel = NIVEIS[0], prox = null;
+  for (let i=0;i<NIVEIS.length;i++){ if (xp >= NIVEIS[i].xp) { nivel = NIVEIS[i]; prox = NIVEIS[i+1] || null; } }
+  $('badge-nivel').textContent = nivel.icone;
+  $('nome-nivel').textContent = nivel.nome + ' · ' + esc(aluno.nome).replace(/&[^;]+;/g,'');
+  $('nome-nivel').innerHTML = esc(aluno.nome) + ' <span style="color:var(--roxo3)">· ' + nivel.nome + '</span>';
+  if (prox) {
+    const faixa = prox.xp - nivel.xp;
+    const pct = Math.min(100, Math.round((xp - nivel.xp) / faixa * 100));
+    $('xp-fill').style.width = pct + '%';
+    $('xp-num').textContent = xp + ' XP · faltam ' + (prox.xp - xp) + ' pro nível ' + prox.nome + ' ' + prox.icone;
+  } else {
+    $('xp-fill').style.width = '100%';
+    $('xp-num').textContent = xp + ' XP · nível máximo, lenda viva! 👑';
+  }
+
+  // stats da semana
+  const sem = inicioSemana(hojeISO());
+  const daSemana = c => inicioSemana(c.data) === sem;
+  const treinosSem = ap.filter(c=>c.tipo==='treino' && daSemana(c)).length;
+  const xpSem = ap.filter(daSemana).reduce((s,c)=>s+c.pontos,0);
+  $('st-streak').textContent = calcStreak();
+  $('st-treinos').textContent = treinosSem + '/' + META_SEMANA;
+  $('st-pontos').textContent = xpSem;
+
+  // treino de hoje
+  const hoje = hojeISO();
+  const treinoHoje = meusCheckins.find(c => c.tipo==='treino' && c.data===hoje && c.status!=='rejeitado');
+  if (!treinoHoje) {
+    $('treino-hoje').innerHTML = `<button class="btn" onclick="abrirModalTreino()">🏋️ REGISTRAR TREINO (+${PONTOS_TREINO} XP)</button>
+      <div style="color:var(--texto2);font-size:12px;margin-top:8px;text-align:center">Tira a foto da prova na hora. Vale XP depois que o Lucas validar.</div>`;
+  } else if (treinoHoje.status === 'pendente') {
+    $('treino-hoje').innerHTML = `<div style="text-align:center;padding:6px 0"><span class="chip pendente">⏳ aguardando o Lucas validar</span><div style="color:var(--texto2);font-size:13px;margin-top:10px">Prova enviada! Já já cai teu XP. 💪</div></div>`;
+  } else {
+    $('treino-hoje').innerHTML = `<div style="text-align:center;padding:6px 0"><span class="chip aprovado">✔ treino de hoje validado</span><div style="color:var(--texto2);font-size:13px;margin-top:10px">+${treinoHoje.pontos} XP no bolso. Te vejo amanhã!</div></div>`;
+  }
+
+  // hábitos de hoje
+  const feitosHoje = new Set(meusCheckins.filter(c=>c.tipo==='habito' && c.data===hoje).map(c=>c.detalhe));
+  $('lista-habitos').innerHTML = habitos.map(h => {
+    const feito = feitosHoje.has(h.nome);
+    return `<div class="habito ${feito?'feito':''}" onclick="${feito?'':'marcarHabito('+h.id+')'}">
+      <div class="check">✔</div>
+      <div class="h-nome">${h.emoji} ${esc(h.nome)}</div>
+      <div class="h-pts">+${h.pontos} XP</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--texto2);font-size:13px">Sem hábitos cadastrados ainda.</div>';
+
+  // missões
+  $('lista-missoes').innerHTML = missoes.map(m => {
+    const feita = meusCheckins.find(c => c.tipo==='missao' && c.detalhe===m.titulo && inicioSemana(c.data)===sem && c.status!=='rejeitado');
+    let acao;
+    if (!feita) acao = `<button class="btn mini" style="margin-top:10px" onclick="abrirModalMissao(${m.id})">CONCLUIR MISSÃO 🎯</button>`;
+    else if (feita.status==='pendente') acao = `<div style="margin-top:10px"><span class="chip pendente">⏳ em validação</span></div>`;
+    else acao = `<div style="margin-top:10px"><span class="chip aprovado">✔ missão cumprida</span></div>`;
+    return `<div style="padding:4px 0">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <b style="font-size:15px">🎯 ${esc(m.titulo)}</b>
+        <span class="missao-pts">+${m.pontos} XP</span>
+      </div>
+      <div style="color:var(--texto2);font-size:13px;margin-top:4px">${esc(m.descricao||'')}</div>
+      ${acao}
+    </div>`;
+  }).join('<div style="height:1px;background:rgba(44,27,82,.5);margin:12px 0"></div>') || '<div style="color:var(--texto2);font-size:13px">Sem missão ativa essa semana. Aproveita pra manter a base: treino e hábitos.</div>';
+
+  // medalhas
+  $('grade-medalhas').innerHTML = calcMedalhas().map(m =>
+    `<div class="medalha ${m.ok?'ganha':'bloq'}">${m.ico}<small>${m.nome}</small></div>`
+  ).join('');
+
+  // histórico
+  const icones = {treino:'🏋️', habito:'✅', missao:'🎯'};
+  $('historico').innerHTML = meusCheckins.slice(0,15).map(c => `
+    <div class="reg">
+      <div class="r-ico">${icones[c.tipo]||'📌'}</div>
+      <div class="r-txt"><b>${c.tipo==='treino'?'Treino':esc(c.detalhe||c.tipo)}</b><span>${dataBR(c.data)} · +${c.pontos} XP</span></div>
+      <span class="chip ${c.status}">${c.status}</span>
+    </div>`).join('') || '<div style="color:var(--texto2);font-size:13px">Teu histórico aparece aqui. Bora começar? 🏁</div>';
+}
+
+async function marcarHabito(id){
+  const h = habitos.find(x=>x.id===id); if(!h) return;
+  try {
+    await api('/rest/v1/checkins', {method:'POST', body: JSON.stringify({
+      aluno_id: aluno.id, tipo:'habito', detalhe: h.nome, pontos: h.pontos, status:'aprovado', data: hojeISO()
+    })});
+    toast('+' + h.pontos + ' XP! ' + h.emoji + ' Hábito registrado.');
+    carregarJogo();
+  } catch(e){ toast('Erro: ' + e.message) }
+}
+
+/* ================== MODAL FOTO ================== */
+function abrirModalTreino(){
+  modalCtx = {tipo:'treino', detalhe:'Treino do dia', pontos:PONTOS_TREINO, blob:null};
+  $('modal-titulo').textContent = 'Prova do treino 📸';
+  $('modal-sub').textContent = 'Manda uma foto sua na academia, do espelho, do aparelho, do que provar que o treino aconteceu. O Lucas confere e libera o XP.';
+  abrirModal();
+}
+function abrirModalMissao(id){
+  const m = missoes.find(x=>x.id===id); if(!m) return;
+  modalCtx = {tipo:'missao', detalhe:m.titulo, pontos:m.pontos, blob:null};
+  $('modal-titulo').textContent = 'Prova da missão 🎯';
+  $('modal-sub').textContent = '"' + m.titulo + '" vale +' + m.pontos + ' XP. Manda a foto que comprova e o Lucas valida.';
+  abrirModal();
+}
+function abrirModal(){
+  $('foto-prev').classList.add('hidden');
+  $('foto-drop').classList.remove('hidden');
+  $('btn-enviar').disabled = true;
+  $('input-foto').value = '';
+  $('modal-foto').classList.remove('hidden');
+}
+function fecharModal(){ $('modal-foto').classList.add('hidden'); modalCtx=null }
+
+$('input-foto').addEventListener('change', function(){
+  const f = this.files[0]; if(!f) return;
+  const img = new Image();
+  img.onload = function(){
+    const MAX = 1280;
+    let w = img.width, h = img.height;
+    if (Math.max(w,h) > MAX) { const k = MAX/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
+    const cv = document.createElement('canvas'); cv.width=w; cv.height=h;
+    cv.getContext('2d').drawImage(img,0,0,w,h);
+    cv.toBlob(b => {
+      modalCtx.blob = b;
+      $('foto-prev').src = URL.createObjectURL(b);
+      $('foto-prev').classList.remove('hidden');
+      $('foto-drop').classList.add('hidden');
+      $('btn-enviar').disabled = false;
+    }, 'image/jpeg', .8);
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(f);
+});
+
+async function enviarCheckin(){
+  if (!modalCtx || !modalCtx.blob) return;
+  const btn = $('btn-enviar'); btn.disabled = true; btn.textContent = 'ENVIANDO...';
+  try {
+    const caminho = aluno.id + '/' + Date.now() + '.jpg';
+    const up = await fetch(SUPA + '/storage/v1/object/provas/' + caminho, {
+      method:'POST',
+      headers:{ 'apikey':ANON, 'Authorization':'Bearer '+ANON, 'Content-Type':'image/jpeg' },
+      body: modalCtx.blob
+    });
+    if (!up.ok) throw new Error('falha no upload da foto');
+    const fotoUrl = SUPA + '/storage/v1/object/public/provas/' + caminho;
+    await api('/rest/v1/checkins', {method:'POST', body: JSON.stringify({
+      aluno_id: aluno.id, tipo: modalCtx.tipo, detalhe: modalCtx.detalhe,
+      pontos: modalCtx.pontos, status:'pendente', foto_url: fotoUrl, data: hojeISO()
+    })});
+    fecharModal();
+    toast('Prova enviada! O Lucas vai validar. 🔍');
+    if (typeof fbq === 'function') fbq('trackCustom', 'CheckinJogo', {tipo: 'checkin'});
+    carregarJogo();
+  } catch(e){ toast('Erro: ' + e.message) }
+  btn.textContent = 'ENVIAR PRA VALIDAÇÃO'; btn.disabled = false;
+}
+
+/* ================== PAINEL DO TREINADOR ================== */
+let timerPainel = null;
+
+async function entrarTreinador(){
+  const chave = $('input-chave').value.trim();
+  if (!chave) return toast('Digite a chave.');
+  try {
+    await rpc('validar_checkin', {p_id:'00000000-0000-0000-0000-000000000000', p_status:'pendente', p_chave:chave});
+    localStorage.setItem('euvseu_chave', chave);
+    mostrarTela('tela-painel'); carregarPainel();
+  } catch(e){ toast('Chave incorreta. 🔒') }
+}
+function sairTreinador(){
+  localStorage.removeItem('euvseu_chave');
+  clearInterval(timerPainel);
+  location.hash = ''; iniciar();
+}
+function trocarAba(aba){
+  document.querySelectorAll('.aba').forEach(b => b.classList.toggle('ativa', b.dataset.aba===aba));
+  ['pendentes','alunos','missoes','habitos'].forEach(a => $('aba-'+a).classList.toggle('hidden', a!==aba));
+}
+
+async function carregarPainel(){
+  clearInterval(timerPainel);
+  timerPainel = setInterval(carregarPainel, 30000);
+  try {
+    const [pend, alunos, todos, miss, habs] = await Promise.all([
+      api('/rest/v1/checkins?status=eq.pendente&select=*,alunos(nome)&order=criado_em.asc'),
+      api('/rest/v1/alunos?select=*&order=nome.asc'),
+      api('/rest/v1/checkins?select=aluno_id,tipo,pontos,status,data&limit=3000'),
+      api('/rest/v1/missoes?select=*&order=id.desc'),
+      api('/rest/v1/habitos?select=*&order=id.asc'),
+    ]);
+    desenharPainel(pend, alunos, todos, miss, habs);
+  } catch(e){ toast('Erro: ' + e.message) }
+}
+
+function desenharPainel(pend, alunos, todos, miss, habs){
+  const icones = {treino:'🏋️', habito:'✅', missao:'🎯'};
+
+  // pendentes
+  $('painel-pendentes').innerHTML = pend.length ? pend.map(c => `
+    <div style="padding:12px 0;border-bottom:1px solid rgba(44,27,82,.5)">
+      <div style="display:flex;gap:10px;align-items:center">
+        ${c.foto_url ? `<img class="foto-mini" src="${c.foto_url}" onclick="window.open('${c.foto_url}','_blank')">` : `<div class="r-ico" style="font-size:26px">${icones[c.tipo]}</div>`}
+        <div style="flex:1;min-width:0">
+          <b>${esc(c.alunos ? c.alunos.nome : '?')}</b>
+          <div style="color:var(--texto2);font-size:12px">${icones[c.tipo]} ${esc(c.detalhe||c.tipo)} · ${dataBR(c.data)} · +${c.pontos} XP</div>
+        </div>
+      </div>
+      <div class="acoes-val">
+        <button class="btn verde" onclick="validar('${c.id}','aprovado')">✔ APROVAR</button>
+        <button class="btn verm" onclick="validar('${c.id}','rejeitado')">✖ REJEITAR</button>
+      </div>
+    </div>`).join('')
+    : '<div style="color:var(--texto2);font-size:14px">Nada pra validar agora. 🧘</div>';
+
+  // visão geral
+  $('painel-alunos').innerHTML = alunos.length ? alunos.map(a => {
+    const meus = todos.filter(c => c.aluno_id===a.id && c.status==='aprovado');
+    const xp = meus.reduce((s,c)=>s+c.pontos,0);
+    let nivel = NIVEIS[0]; NIVEIS.forEach(n => { if (xp>=n.xp) nivel=n });
+    const sem = inicioSemana(hojeISO());
+    const treinosSem = meus.filter(c=>c.tipo==='treino' && inicioSemana(c.data)===sem).length;
+    // streak
+    const porSemana = {};
+    meus.filter(c=>c.tipo==='treino').forEach(c => { const s=inicioSemana(c.data); porSemana[s]=(porSemana[s]||0)+1 });
+    let streak=0, s2=sem;
+    if ((porSemana[s2]||0)>=META_SEMANA) streak++;
+    s2 = semanaAnterior(s2);
+    while((porSemana[s2]||0)>=META_SEMANA){ streak++; s2=semanaAnterior(s2) }
+    return `<div class="aluno-resumo">
+      <div class="ar-badge">${nivel.icone}</div>
+      <div class="ar-info"><b>${esc(a.nome)}</b><span>${nivel.nome} · 🔥 ${streak} sem · 🏋️ ${treinosSem}/${META_SEMANA} essa semana</span></div>
+      <div class="ar-pts">${xp} XP</div>
+    </div>`;
+  }).join('') : '<div style="color:var(--texto2);font-size:14px">Nenhum atleta ainda. Manda o link pra turma!</div>';
+
+  // missões
+  $('painel-missoes').innerHTML = miss.map(m => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(44,27,82,.5)">
+      <div style="flex:1;min-width:0;${m.ativa?'':'opacity:.4'}"><b>🎯 ${esc(m.titulo)}</b><div style="color:var(--texto2);font-size:12px">+${m.pontos} XP</div></div>
+      <button class="btn mini ${m.ativa?'verm':'verde'}" onclick="alternarMissao(${m.id},${!m.ativa})">${m.ativa?'ENCERRAR':'REATIVAR'}</button>
+    </div>`).join('') || '<div style="color:var(--texto2);font-size:14px">Nenhuma missão criada.</div>';
+
+  // hábitos
+  $('painel-habitos').innerHTML = habs.map(h => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(44,27,82,.5)">
+      <div style="flex:1;min-width:0;${h.ativo?'':'opacity:.4'}"><b>${h.emoji} ${esc(h.nome)}</b><div style="color:var(--texto2);font-size:12px">+${h.pontos} XP por dia</div></div>
+      <button class="btn mini ${h.ativo?'verm':'verde'}" onclick="alternarHabito(${h.id},${!h.ativo})">${h.ativo?'PAUSAR':'ATIVAR'}</button>
+    </div>`).join('') || '<div style="color:var(--texto2);font-size:14px">Nenhum hábito criado.</div>';
+}
+
+function chave(){ return localStorage.getItem('euvseu_chave') || '' }
+async function validar(id, status){
+  try { await rpc('validar_checkin', {p_id:id, p_status:status, p_chave:chave()});
+    toast(status==='aprovado' ? 'Aprovado! ✔' : 'Rejeitado.'); carregarPainel();
+  } catch(e){ toast('Erro: ' + e.message) }
+}
+async function criarMissao(){
+  const t = $('m-titulo').value.trim(); if(!t) return toast('Dá um título pra missão.');
+  try { await rpc('salvar_missao', {p_titulo:t, p_descricao:$('m-desc').value.trim(), p_pontos:parseInt($('m-pontos').value)||30, p_chave:chave()});
+    $('m-titulo').value=''; $('m-desc').value=''; toast('Missão criada! 🎯'); carregarPainel();
+  } catch(e){ toast('Erro: ' + e.message) }
+}
+async function alternarMissao(id, ativa){
+  try { await rpc('alternar_missao', {p_id:id, p_ativa:ativa, p_chave:chave()}); carregarPainel() }
+  catch(e){ toast('Erro: ' + e.message) }
+}
+async function criarHabito(){
+  const n = $('h-nome').value.trim(); if(!n) return toast('Dá um nome pro hábito.');
+  try { await rpc('salvar_habito', {p_nome:n, p_emoji:$('h-emoji').value.trim()||'✅', p_pontos:parseInt($('h-pontos').value)||5, p_chave:chave()});
+    $('h-nome').value=''; $('h-emoji').value=''; toast('Hábito criado! ✅'); carregarPainel();
+  } catch(e){ toast('Erro: ' + e.message) }
+}
+async function alternarHabito(id, ativo){
+  try { await rpc('alternar_habito', {p_id:id, p_ativo:ativo, p_chave:chave()}); carregarPainel() }
+  catch(e){ toast('Erro: ' + e.message) }
+}
+
+iniciar();
+</script>
+</body>
+</html>
