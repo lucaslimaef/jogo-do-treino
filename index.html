@@ -407,6 +407,21 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
     </div>
   </div>
 
+  <!-- ===================== MODAL QUANTIDADE (sono / passos) ===================== -->
+  <div id="modal-qtd" class="modal-bg hidden">
+    <div class="modal">
+      <h2 id="qtd-titulo">Quantidade</h2>
+      <div style="display:flex;align-items:center;gap:10px;margin:12px 0">
+        <input type="number" id="qtd-input" inputmode="decimal" oninput="previewQtd()" style="flex:1;font-size:22px;text-align:center">
+        <span id="qtd-sufixo" style="color:var(--texto2);font-size:14px;min-width:54px"></span>
+      </div>
+      <div id="qtd-previa" style="text-align:center;font-family:'Chakra Petch';font-weight:700;color:var(--ciano);font-size:20px;min-height:24px;margin-bottom:6px"></div>
+      <button class="btn" onclick="confirmarQtd()">CONTINUAR</button>
+      <div style="height:8px"></div>
+      <button class="btn fant" onclick="fecharQtd()">Cancelar</button>
+    </div>
+  </div>
+
 </div>
 <div id="toast"></div>
 
@@ -416,7 +431,7 @@ const SUPA = 'https://tgmzleagedfjvyadkgbq.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnbXpsZWFnZWRmanZ5YWRrZ2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODc2MjMsImV4cCI6MjA5Njg2MzYyM30.BSd_lUTcJy2EQh8s312I4uX9vQdxgGlEXF7o6bHxGj4';
 const WHATSAPP = '351960259288'; // WhatsApp do Lucas (Portugal +351). Vazio = aviso sem botão.
 const PONTOS_TREINO = 20;
-const META_SEMANA = 3;
+const META_SEMANA = 5;
 const NIVEIS = [
   {xp:0,    nome:'Novato',       icone:'🌱'},
   {xp:100,  nome:'Iniciado',     icone:'🔰'},
@@ -605,28 +620,45 @@ function desenharJogo(){
   }
 
   // hábitos de hoje
-  const habHoje = {};
-  meusCheckins.filter(c=>c.tipo==='habito' && c.data===hoje && c.status!=='rejeitado').forEach(c => habHoje[c.detalhe]=c);
+  const doHabito = (c, h) => c.detalhe===h.nome || (c.detalhe||'').startsWith(h.nome+' (');
+  const checkinsHoje = meusCheckins.filter(c=>c.tipo==='habito' && c.data===hoje && c.status!=='rejeitado');
   $('lista-habitos').innerHTML = habitos.map(h => {
-    const reg = habHoje[h.nome];
+    const regs = checkinsHoje.filter(c => doHabito(c, h));
+    const sufixo = {hora:'/hora', 'mil passos':'/1.000 passos', foto:'/foto'}[h.unidade] || '';
+    const dica = h.requer_validacao ? ' <span style="color:var(--texto2);font-size:11px">📱 prova no Whats</span>' : '';
+
+    // repetível (alimentação): sempre dá pra mandar mais
+    if (h.modo === 'repetivel') {
+      const pend = regs.filter(c=>c.status==='pendente').length;
+      const oks = regs.filter(c=>c.status==='aprovado').length;
+      const status = regs.length ? `<div style="color:var(--texto2);font-size:11px;margin-top:2px">${oks} validada(s)${pend?` · ${pend} pendente(s)`:''} hoje</div>` : '';
+      return `<div class="habito" onclick="marcarHabito(${h.id})">
+        <div class="check">＋</div>
+        <div class="h-nome">${h.emoji} ${esc(h.nome)}${dica}${status}</div>
+        <div class="h-pts">+${h.pontos} XP${sufixo}</div>
+      </div>`;
+    }
+
+    // sono/passos/água: 1x por dia
+    const reg = regs[0];
     if (reg && reg.status==='pendente') {
       return `<div class="habito feito">
         <div class="check" style="border-color:var(--amarelo);background:rgba(251,191,36,.12);color:var(--amarelo)">⏳</div>
-        <div class="h-nome">${h.emoji} ${esc(h.nome)}</div>
+        <div class="h-nome">${esc(reg.detalhe)}</div>
         <div class="h-pts" style="color:var(--amarelo)">pendente</div>
       </div>`;
     }
     if (reg) {
       return `<div class="habito feito">
         <div class="check">✔</div>
-        <div class="h-nome">${h.emoji} ${esc(h.nome)}</div>
-        <div class="h-pts">+${h.pontos} XP</div>
+        <div class="h-nome">${esc(reg.detalhe)}</div>
+        <div class="h-pts">+${reg.pontos} XP</div>
       </div>`;
     }
     return `<div class="habito" onclick="marcarHabito(${h.id})">
       <div class="check">✔</div>
-      <div class="h-nome">${h.emoji} ${esc(h.nome)}${h.requer_validacao?' <span style="color:var(--texto2);font-size:11px">📱 prova no Whats</span>':''}</div>
-      <div class="h-pts">+${h.pontos} XP</div>
+      <div class="h-nome">${h.emoji} ${esc(h.nome)}${dica}</div>
+      <div class="h-pts">+${h.pontos} XP${sufixo}</div>
     </div>`;
   }).join('') || '<div style="color:var(--texto2);font-size:13px">Sem hábitos cadastrados ainda.</div>';
 
@@ -699,6 +731,7 @@ function desenharRanking(periodo){
 
 async function marcarHabito(id){
   const h = habitos.find(x=>x.id===id); if(!h) return;
+  if (h.modo === 'quantidade') { abrirModalQtd(h); return; }
   if (h.requer_validacao) { abrirAvisoHabito(h); return; }
   try {
     await api('/rest/v1/checkins', {method:'POST', body: JSON.stringify({
@@ -707,6 +740,45 @@ async function marcarHabito(id){
     toast('+' + h.pontos + ' XP! ' + h.emoji + ' Hábito registrado.');
     carregarJogo();
   } catch(e){ toast('Erro: ' + e.message) }
+}
+
+/* ===== hábito por quantidade (sono em horas, passos) ===== */
+let qtdHabito = null;
+function abrirModalQtd(h){
+  qtdHabito = h;
+  const cfg = {
+    hora:        {titulo:'😴 Quantas horas você dormiu?', ph:'Ex: 8', sufixo:'horas', step:'0.5'},
+    'mil passos':{titulo:'👟 Quantos passos você deu hoje?', ph:'Ex: 8000', sufixo:'passos', step:'100'}
+  }[h.unidade] || {titulo:h.nome, ph:'Quantidade', sufixo:'', step:'1'};
+  $('qtd-titulo').textContent = cfg.titulo;
+  $('qtd-sufixo').textContent = cfg.sufixo;
+  $('qtd-input').value = '';
+  $('qtd-input').step = cfg.step;
+  $('qtd-input').placeholder = cfg.ph;
+  $('qtd-previa').textContent = '';
+  $('modal-qtd').classList.remove('hidden');
+  setTimeout(()=>$('qtd-input').focus(), 100);
+}
+function calcXpQtd(h, n){
+  if (h.unidade === 'mil passos') return Math.floor(n/1000) * h.pontos;
+  return Math.round(n * h.pontos); // horas
+}
+function previewQtd(){
+  const h = qtdHabito; const n = parseFloat($('qtd-input').value);
+  $('qtd-previa').textContent = (h && n>0) ? ('= ' + calcXpQtd(h, n) + ' XP') : '';
+}
+function fecharQtd(){ $('modal-qtd').classList.add('hidden'); qtdHabito=null; }
+function confirmarQtd(){
+  const h = qtdHabito; const n = parseFloat($('qtd-input').value);
+  if (!h || !(n>0)) return toast('Coloca um número válido 😉');
+  const xp = calcXpQtd(h, n);
+  if (xp <= 0) return toast('Precisa de pelo menos 1.000 passos pra contar.');
+  const detalhe = h.unidade==='mil passos'
+    ? h.nome + ' (' + Math.round(n).toLocaleString('pt-BR') + ')'
+    : h.nome + ' (' + n + 'h)';
+  fecharQtd();
+  abrirAviso({tipo:'habito', detalhe, pontos:xp}, h.emoji + ' ' + detalhe,
+    (h.aviso || 'Manda a prova no meu WhatsApp que eu valido. Fica pendente até lá.') + '\n\nVale ' + xp + ' XP.');
 }
 
 /* ===== prova por WhatsApp (treino, missão e hábito) ===== */
