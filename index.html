@@ -237,8 +237,10 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
       <h3>Quem está treinando?</h3>
       <input type="text" id="novo-nome" placeholder="Digite seu nome" maxlength="40" autocomplete="off">
       <div style="height:10px"></div>
+      <input type="password" id="novo-pin" placeholder="PIN de 4 números" inputmode="numeric" maxlength="4" autocomplete="off">
+      <div style="height:10px"></div>
       <button class="btn" onclick="entrarNoJogo()">ENTRAR NO JOGO</button>
-      <div style="color:var(--texto2);font-size:12px;margin-top:10px;text-align:center">Digite sempre do mesmo jeito pra cair no seu progresso. Fica salvo no seu celular.</div>
+      <div style="color:var(--texto2);font-size:12px;margin-top:10px;text-align:center">É a 1ª vez? Crie um PIN de 4 números. Da próxima vez, use o mesmo nome e PIN pra cair no seu progresso. Ele protege sua conta.</div>
     </div>
     <div class="rodape">Jogo dos alunos do Lucas Lima · @personaltrainerlucaslima</div>
   </div>
@@ -306,20 +308,6 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
 
     <button class="btn fant" style="margin-top:16px" onclick="sairAluno()">Trocar de atleta</button>
     <div class="rodape">Treinos e missões valem XP depois que o Lucas confere a prova. 💪<br>@personaltrainerlucaslima</div>
-  </div>
-
-  <!-- ===================== TELA TREINADOR: CHAVE ===================== -->
-  <div id="tela-chave" class="hidden">
-    <div class="logo">
-      <div class="vs" style="font-size:30px">EU vs EU</div>
-      <div class="tag">Painel do treinador</div>
-    </div>
-    <div class="card">
-      <h3>Chave do treinador</h3>
-      <input type="password" id="input-chave" placeholder="Digite a chave">
-      <div style="height:10px"></div>
-      <button class="btn" onclick="entrarTreinador()">ENTRAR</button>
-    </div>
   </div>
 
   <!-- ===================== TELA TREINADOR: PAINEL ===================== -->
@@ -479,7 +467,7 @@ function semanaAnterior(seg){
 }
 function dataBR(iso){ const p=iso.split('-'); return p[2]+'/'+p[1] }
 function mostrarTela(id){
-  ['tela-entrada','tela-jogo','tela-chave','tela-painel'].forEach(t => $(t).classList.add('hidden'));
+  ['tela-entrada','tela-jogo','tela-painel'].forEach(t => $(t).classList.add('hidden'));
   $(id).classList.remove('hidden');
 }
 
@@ -491,10 +479,11 @@ let missoes = [];
 
 /* ================== ENTRADA / ROTEAMENTO ================== */
 async function iniciar(){
-  if (location.hash === '#treinador') {
-    const chave = localStorage.getItem('euvseu_chave');
-    if (chave) { mostrarTela('tela-painel'); carregarPainel(); }
-    else mostrarTela('tela-chave');
+  // painel do treinador: acesso por link secreto (#treinador-<chave>)
+  if (location.hash.startsWith('#treinador-')) {
+    const ch = location.hash.slice('#treinador-'.length);
+    localStorage.setItem('euvseu_chave', ch);
+    mostrarTela('tela-painel'); carregarPainel();
     return;
   }
   const salvo = localStorage.getItem('euvseu_aluno');
@@ -510,18 +499,20 @@ window.addEventListener('hashchange', iniciar);
 
 async function entrarNoJogo(){
   const nome = $('novo-nome').value.trim();
+  const pin = $('novo-pin').value.trim();
   if (!nome) return toast('Escreve seu nome primeiro 😉');
+  if (!/^[0-9]{4}$/.test(pin)) return toast('Cria um PIN de 4 números 🔢');
   try {
-    const r = await rpc('entrar_ou_criar_aluno', {p_nome: nome});
+    const r = await rpc('entrar_ou_criar_aluno', {p_nome: nome, p_pin: pin});
     aluno = {id: r[0].id, nome: r[0].nome};
     localStorage.setItem('euvseu_aluno', JSON.stringify(aluno));
     mostrarTela('tela-jogo'); carregarJogo();
     toast('Bora jogar, ' + aluno.nome + '! 🎮');
-  } catch(e){ toast('Erro: ' + e.message) }
+  } catch(e){ toast(e.message.includes('PIN incorreto') ? 'PIN incorreto pra esse nome 🔒' : 'Erro: ' + e.message) }
 }
 function sairAluno(){
   localStorage.removeItem('euvseu_aluno'); aluno=null;
-  $('novo-nome').value='';
+  $('novo-nome').value=''; $('novo-pin').value='';
   mostrarTela('tela-entrada');
 }
 
@@ -826,15 +817,6 @@ async function confirmarPendente(){
 /* ================== PAINEL DO TREINADOR ================== */
 let timerPainel = null;
 
-async function entrarTreinador(){
-  const chave = $('input-chave').value.trim();
-  if (!chave) return toast('Digite a chave.');
-  try {
-    await rpc('validar_checkin', {p_id:'00000000-0000-0000-0000-000000000000', p_status:'pendente', p_chave:chave});
-    localStorage.setItem('euvseu_chave', chave);
-    mostrarTela('tela-painel'); carregarPainel();
-  } catch(e){ toast('Chave incorreta. 🔒') }
-}
 function sairTreinador(){
   localStorage.removeItem('euvseu_chave');
   clearInterval(timerPainel);
