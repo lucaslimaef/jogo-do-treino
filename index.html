@@ -286,6 +286,8 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
       <div class="abas" style="margin-top:0;margin-bottom:14px">
         <button class="aba ativa" data-rk="semana" onclick="trocarPeriodo('semana')">📅 Semana</button>
         <button class="aba" data-rk="mes" onclick="trocarPeriodo('mes')">🗓️ Mês</button>
+        <button class="aba" data-rk="tri" onclick="trocarPeriodo('tri')">📆 Trimestre</button>
+        <button class="aba" data-rk="sem" onclick="trocarPeriodo('sem')">🌗 Semestre</button>
         <button class="aba" data-rk="ano" onclick="trocarPeriodo('ano')">👑 Ano</button>
       </div>
       <div id="minha-posicao"></div>
@@ -655,12 +657,12 @@ function trocarPeriodo(p){
   desenharRanking(p);
 }
 function desenharRanking(periodo){
-  const campo = {semana:'xp_semana', mes:'xp_mes', ano:'xp_ano'}[periodo] || 'xp_semana';
+  const campo = {semana:'xp_semana', mes:'xp_mes', tri:'xp_tri', sem:'xp_sem', ano:'xp_ano'}[periodo] || 'xp_semana';
   if (!Array.isArray(rankingData) || !rankingData.length) { $('lista-ranking').innerHTML=''; $('minha-posicao').innerHTML=''; return; }
   const lista = rankingData.slice().sort((a,b) => (b[campo]||0) - (a[campo]||0));
   const total = lista.length;
   const minhaPos = lista.findIndex(r => (r.nome||'').toLowerCase() === aluno.nome.toLowerCase()) + 1;
-  const rotulo = {semana:'esta semana', mes:'este mês', ano:'este ano'}[periodo];
+  const rotulo = {semana:'esta semana', mes:'este mês', tri:'neste trimestre', sem:'neste semestre', ano:'este ano'}[periodo];
   const medal = ['🥇','🥈','🥉'];
   $('minha-posicao').innerHTML = minhaPos
     ? `<div style="background:linear-gradient(135deg,rgba(124,58,237,.25),rgba(34,211,238,.12));border:1px solid var(--roxo2);border-radius:14px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:12px">
