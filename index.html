@@ -282,6 +282,17 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
     </div>
 
     <div class="card">
+      <h3>🏆 Ranking</h3>
+      <div class="abas" style="margin-top:0;margin-bottom:14px">
+        <button class="aba ativa" data-rk="semana" onclick="trocarPeriodo('semana')">📅 Semana</button>
+        <button class="aba" data-rk="mes" onclick="trocarPeriodo('mes')">🗓️ Mês</button>
+        <button class="aba" data-rk="ano" onclick="trocarPeriodo('ano')">👑 Ano</button>
+      </div>
+      <div id="minha-posicao"></div>
+      <div id="lista-ranking"></div>
+    </div>
+
+    <div class="card">
       <h3>Minhas medalhas</h3>
       <div class="medalhas" id="grade-medalhas"></div>
     </div>
@@ -328,7 +339,9 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
         <div id="painel-pendentes"></div></div>
     </div>
     <div id="aba-alunos" class="hidden">
-      <div class="card"><h3>🏆 Ranking dos atletas</h3><div id="painel-alunos"></div></div>
+      <div class="card"><h3>👥 Meus alunos reais</h3>
+        <div style="color:var(--texto2);font-size:12px;margin:-4px 0 12px">Só você vê esta lista. No ranking público eles aparecem junto com os 500 atletas de fundo. 🤫</div>
+        <div id="painel-alunos"></div></div>
     </div>
     <div id="aba-missoes" class="hidden">
       <div class="card"><h3>Nova missão da semana</h3>
@@ -483,12 +496,16 @@ function sairAluno(){
 /* ================== JOGO DO ALUNO ================== */
 async function carregarJogo(){
   try {
-    [meusCheckins, habitos, missoes] = await Promise.all([
+    let ranking;
+    [meusCheckins, habitos, missoes, ranking] = await Promise.all([
       api('/rest/v1/checkins?aluno_id=eq.' + aluno.id + '&select=*&order=criado_em.desc&limit=400'),
       api('/rest/v1/habitos?ativo=eq.true&select=*&order=id.asc'),
-      api('/rest/v1/missoes?ativa=eq.true&select=*&order=id.desc')
+      api('/rest/v1/missoes?ativa=eq.true&select=*&order=id.desc'),
+      rpc('ranking_geral', {})
     ]);
+    rankingData = ranking || [];
     desenharJogo();
+    desenharRanking(periodoRanking);
   } catch(e){ toast('Erro ao carregar: ' + e.message) }
 }
 
@@ -626,6 +643,41 @@ function desenharJogo(){
       <div class="r-txt"><b>${c.tipo==='treino'?'Treino':esc(c.detalhe||c.tipo)}</b><span>${dataBR(c.data)} · +${c.pontos} XP</span></div>
       <span class="chip ${c.status}">${c.status}</span>
     </div>`).join('') || '<div style="color:var(--texto2);font-size:13px">Teu histórico aparece aqui. Bora começar? 🏁</div>';
+}
+
+function iconeNivel(xp){ let ic=NIVEIS[0].icone; NIVEIS.forEach(n=>{ if(xp>=n.xp) ic=n.icone }); return ic; }
+
+let rankingData = [];
+let periodoRanking = 'semana';
+function trocarPeriodo(p){
+  periodoRanking = p;
+  document.querySelectorAll('[data-rk]').forEach(b => b.classList.toggle('ativa', b.dataset.rk===p));
+  desenharRanking(p);
+}
+function desenharRanking(periodo){
+  const campo = {semana:'xp_semana', mes:'xp_mes', ano:'xp_ano'}[periodo] || 'xp_semana';
+  if (!Array.isArray(rankingData) || !rankingData.length) { $('lista-ranking').innerHTML=''; $('minha-posicao').innerHTML=''; return; }
+  const lista = rankingData.slice().sort((a,b) => (b[campo]||0) - (a[campo]||0));
+  const total = lista.length;
+  const minhaPos = lista.findIndex(r => (r.nome||'').toLowerCase() === aluno.nome.toLowerCase()) + 1;
+  const rotulo = {semana:'esta semana', mes:'este mês', ano:'este ano'}[periodo];
+  const medal = ['🥇','🥈','🥉'];
+  $('minha-posicao').innerHTML = minhaPos
+    ? `<div style="background:linear-gradient(135deg,rgba(124,58,237,.25),rgba(34,211,238,.12));border:1px solid var(--roxo2);border-radius:14px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:12px">
+         <div style="font-family:'Chakra Petch';font-weight:700;font-size:26px;color:var(--roxo3)">${minhaPos}º</div>
+         <div style="flex:1;font-size:13px"><b>Você está em ${minhaPos}º de ${total} ${rotulo}</b><div style="color:var(--texto2);font-size:12px">${minhaPos<=20?'Tá no top 20! 🔥':'Cada treino te faz subir. Bora! 💪'}</div></div>
+       </div>`
+    : '';
+  $('lista-ranking').innerHTML = lista.slice(0,20).map((r,i) => {
+    const eu = (r.nome||'').toLowerCase() === aluno.nome.toLowerCase() && (i+1)===minhaPos;
+    const pos = medal[i] || `<span style="color:var(--texto2);font-size:13px;font-family:'Chakra Petch'">${i+1}</span>`;
+    return `<div class="reg" style="${eu?'background:rgba(124,58,237,.14);border-radius:10px;padding-left:8px;padding-right:8px;margin:2px -8px':''}">
+      <div style="width:26px;text-align:center;flex:none;font-size:18px">${pos}</div>
+      <div class="r-ico" style="font-size:18px">${iconeNivel(r[campo])}</div>
+      <div class="r-txt" style="flex:1"><b>${esc(r.nome)}${eu?' <span style="color:var(--roxo3)">(você)</span>':''}</b></div>
+      <span class="missao-pts">${r[campo]} XP</span>
+    </div>`;
+  }).join('');
 }
 
 async function marcarHabito(id){
