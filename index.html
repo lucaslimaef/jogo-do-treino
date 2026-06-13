@@ -330,6 +330,7 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
     </div>
     <div class="abas">
       <button class="aba ativa" data-aba="pendentes" onclick="trocarAba('pendentes')">✋ Validar</button>
+      <button class="aba" data-aba="ranking" onclick="trocarAba('ranking')">🏆 Ranking</button>
       <button class="aba" data-aba="alunos" onclick="trocarAba('alunos')">👥 Alunos</button>
       <button class="aba" data-aba="missoes" onclick="trocarAba('missoes')">🎯 Missões</button>
       <button class="aba" data-aba="habitos" onclick="trocarAba('habitos')">✅ Hábitos</button>
@@ -339,6 +340,20 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
       <div class="card"><h3>Aguardando validação</h3>
         <div style="color:var(--texto2);font-size:12px;margin:-4px 0 12px">📲 As fotos de prova chegam no teu WhatsApp. Confere lá e aprova ou rejeita aqui.</div>
         <div id="painel-pendentes"></div></div>
+    </div>
+    <div id="aba-ranking" class="hidden">
+      <div class="card"><h3>🏆 Ranking público</h3>
+        <div style="color:var(--texto2);font-size:12px;margin:-4px 0 12px">É o que os alunos veem. 👤 = seu aluno real. Embaixo, a posição de cada um.</div>
+        <div class="abas" style="margin-top:0;margin-bottom:14px">
+          <button class="aba ativa" data-rkp="semana" onclick="trocarPeriodoPainel('semana')">📅 Semana</button>
+          <button class="aba" data-rkp="mes" onclick="trocarPeriodoPainel('mes')">🗓️ Mês</button>
+          <button class="aba" data-rkp="tri" onclick="trocarPeriodoPainel('tri')">📆 Trimestre</button>
+          <button class="aba" data-rkp="sem" onclick="trocarPeriodoPainel('sem')">🌗 Semestre</button>
+          <button class="aba" data-rkp="ano" onclick="trocarPeriodoPainel('ano')">👑 Ano</button>
+        </div>
+        <div id="painel-meus-no-ranking"></div>
+        <div id="painel-ranking"></div>
+      </div>
     </div>
     <div id="aba-alunos" class="hidden">
       <div class="card"><h3>👥 Meus alunos reais</h3>
@@ -754,25 +769,65 @@ function sairTreinador(){
   location.hash = ''; iniciar();
 }
 function trocarAba(aba){
-  document.querySelectorAll('.aba').forEach(b => b.classList.toggle('ativa', b.dataset.aba===aba));
-  ['pendentes','alunos','missoes','habitos'].forEach(a => $('aba-'+a).classList.toggle('hidden', a!==aba));
+  document.querySelectorAll('[data-aba]').forEach(b => b.classList.toggle('ativa', b.dataset.aba===aba));
+  ['pendentes','ranking','alunos','missoes','habitos'].forEach(a => $('aba-'+a).classList.toggle('hidden', a!==aba));
 }
+
+let rankingPainelData = [];
+let periodoPainel = 'semana';
+let nomesReais = new Set();
 
 async function carregarPainel(){
   clearInterval(timerPainel);
   timerPainel = setInterval(carregarPainel, 30000);
   try {
-    const [pend, alunos, todos, miss, habs] = await Promise.all([
+    const [pend, alunos, todos, miss, habs, rk] = await Promise.all([
       api('/rest/v1/checkins?status=eq.pendente&select=*&order=criado_em.asc'),
       rpc('listar_alunos', {p_chave: chave()}),
       api('/rest/v1/checkins?select=aluno_id,tipo,pontos,status,data&limit=3000'),
       api('/rest/v1/missoes?select=*&order=id.desc'),
       api('/rest/v1/habitos?select=*&order=id.asc'),
+      rpc('ranking_geral', {})
     ]);
     const nomePorId = {}; alunos.forEach(a => nomePorId[a.id]=a.nome);
     pend.forEach(c => c._nome = nomePorId[c.aluno_id] || '?');
+    rankingPainelData = rk || [];
+    nomesReais = new Set(alunos.map(a => (a.nome||'').toLowerCase()));
     desenharPainel(pend, alunos, todos, miss, habs);
+    desenharRankingPainel(periodoPainel);
   } catch(e){ toast('Erro: ' + e.message) }
+}
+
+function trocarPeriodoPainel(p){
+  periodoPainel = p;
+  document.querySelectorAll('[data-rkp]').forEach(b => b.classList.toggle('ativa', b.dataset.rkp===p));
+  desenharRankingPainel(p);
+}
+function desenharRankingPainel(periodo){
+  const campo = {semana:'xp_semana', mes:'xp_mes', tri:'xp_tri', sem:'xp_sem', ano:'xp_ano'}[periodo] || 'xp_semana';
+  if (!rankingPainelData.length) { $('painel-ranking').innerHTML=''; $('painel-meus-no-ranking').innerHTML=''; return; }
+  const lista = rankingPainelData.slice().sort((a,b)=>(b[campo]||0)-(a[campo]||0));
+  const total = lista.length;
+  // posição dos meus alunos reais
+  const meus = [];
+  lista.forEach((r,i) => { if (nomesReais.has((r.nome||'').toLowerCase())) meus.push({nome:r.nome, pos:i+1, xp:r[campo]}); });
+  $('painel-meus-no-ranking').innerHTML = meus.length
+    ? `<div style="background:rgba(124,58,237,.12);border:1px solid var(--borda);border-radius:12px;padding:10px 12px;margin-bottom:12px">
+         <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--roxo3);margin-bottom:6px">👤 Seus alunos</div>
+         ${meus.sort((a,b)=>a.pos-b.pos).map(m=>`<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0"><b>${m.pos}º · ${esc(m.nome)}</b><span style="color:var(--ciano)">${m.xp} XP</span></div>`).join('')}
+       </div>`
+    : '';
+  const medal = ['🥇','🥈','🥉'];
+  $('painel-ranking').innerHTML = lista.slice(0,30).map((r,i)=>{
+    const real = nomesReais.has((r.nome||'').toLowerCase());
+    const pos = medal[i] || `<span style="color:var(--texto2);font-size:13px;font-family:'Chakra Petch'">${i+1}</span>`;
+    return `<div class="reg" style="${real?'background:rgba(124,58,237,.14);border-radius:10px;padding-left:8px;padding-right:8px;margin:2px -8px':''}">
+      <div style="width:26px;text-align:center;flex:none;font-size:18px">${pos}</div>
+      <div class="r-ico" style="font-size:18px">${real?'👤':iconeNivel(r[campo])}</div>
+      <div class="r-txt" style="flex:1"><b>${esc(r.nome)}</b></div>
+      <span class="missao-pts">${r[campo]} XP</span>
+    </div>`;
+  }).join('');
 }
 
 function desenharPainel(pend, alunos, todos, miss, habs){
