@@ -191,11 +191,6 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
 }
 .modal h2{font-size:18px;margin-bottom:6px}
 .modal p{color:var(--texto2);font-size:13px;margin-bottom:14px}
-.foto-prev{width:100%;border-radius:14px;margin:10px 0;display:block;max-height:300px;object-fit:cover}
-.foto-drop{
-  border:2px dashed var(--borda);border-radius:14px;padding:26px;text-align:center;color:var(--texto2);
-  font-size:14px;cursor:pointer;margin:10px 0;
-}
 
 /* ===== toast ===== */
 #toast{
@@ -328,7 +323,9 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
     </div>
 
     <div id="aba-pendentes">
-      <div class="card"><h3>Aguardando validação</h3><div id="painel-pendentes"></div></div>
+      <div class="card"><h3>Aguardando validação</h3>
+        <div style="color:var(--texto2);font-size:12px;margin:-4px 0 12px">📲 As fotos de prova chegam no teu WhatsApp. Confere lá e aprova ou rejeita aqui.</div>
+        <div id="painel-pendentes"></div></div>
     </div>
     <div id="aba-alunos" class="hidden">
       <div class="card"><h3>🏆 Ranking dos atletas</h3><div id="painel-alunos"></div></div>
@@ -367,28 +364,14 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
     <button class="btn fant" style="margin-top:10px" onclick="sairTreinador()">Sair do painel</button>
   </div>
 
-  <!-- ===================== MODAL FOTO ===================== -->
-  <div id="modal-foto" class="modal-bg hidden">
-    <div class="modal">
-      <h2 id="modal-titulo">Prova do treino 📸</h2>
-      <p id="modal-sub">Manda uma foto sua na academia, do espelho, do aparelho, do suor no chão. O Lucas confere e libera o XP.</p>
-      <input type="file" id="input-foto" accept="image/*" capture="environment" class="hidden">
-      <div class="foto-drop" id="foto-drop" onclick="document.getElementById('input-foto').click()">📷 Toque para tirar ou escolher a foto</div>
-      <img id="foto-prev" class="foto-prev hidden" alt="prova">
-      <button class="btn" id="btn-enviar" onclick="enviarCheckin()" disabled>ENVIAR PRA VALIDAÇÃO</button>
-      <div style="height:8px"></div>
-      <button class="btn fant" onclick="fecharModal()">Cancelar</button>
-    </div>
-  </div>
-
-  <!-- ===================== MODAL AVISO (hábito por WhatsApp) ===================== -->
+  <!-- ===================== MODAL AVISO (prova por WhatsApp) ===================== -->
   <div id="modal-aviso" class="modal-bg hidden">
     <div class="modal">
       <h2 id="aviso-titulo">Hábito</h2>
       <p id="aviso-texto"></p>
       <a id="aviso-whats" class="btn verde hidden" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">📲 ABRIR MEU WHATSAPP</a>
       <div style="height:8px"></div>
-      <button class="btn" onclick="confirmarHabitoPendente()">JÁ VOU MANDAR, DEIXAR PENDENTE</button>
+      <button class="btn" onclick="confirmarPendente()">JÁ VOU MANDAR, DEIXAR PENDENTE</button>
       <div style="height:8px"></div>
       <button class="btn fant" onclick="fecharAviso()">Cancelar</button>
     </div>
@@ -401,7 +384,7 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
 /* ================== CONFIG ================== */
 const SUPA = 'https://tgmzleagedfjvyadkgbq.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnbXpsZWFnZWRmanZ5YWRrZ2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODc2MjMsImV4cCI6MjA5Njg2MzYyM30.BSd_lUTcJy2EQh8s312I4uX9vQdxgGlEXF7o6bHxGj4';
-const WHATSAPP = '351960159288'; // WhatsApp do Lucas (Portugal +351). Vazio = aviso sem botão.
+const WHATSAPP = '351960259288'; // WhatsApp do Lucas (Portugal +351). Vazio = aviso sem botão.
 const PONTOS_TREINO = 20;
 const META_SEMANA = 3;
 const NIVEIS = [
@@ -460,7 +443,6 @@ let aluno = null;       // {id, nome}
 let meusCheckins = [];
 let habitos = [];
 let missoes = [];
-let modalCtx = null;    // {tipo, detalhe, pontos, blob}
 
 /* ================== ENTRADA / ROTEAMENTO ================== */
 async function iniciar(){
@@ -580,10 +562,10 @@ function desenharJogo(){
   const hoje = hojeISO();
   const treinoHoje = meusCheckins.find(c => c.tipo==='treino' && c.data===hoje && c.status!=='rejeitado');
   if (!treinoHoje) {
-    $('treino-hoje').innerHTML = `<button class="btn" onclick="abrirModalTreino()">🏋️ REGISTRAR TREINO (+${PONTOS_TREINO} XP)</button>
-      <div style="color:var(--texto2);font-size:12px;margin-top:8px;text-align:center">Tira a foto da prova na hora. Vale XP depois que o Lucas validar.</div>`;
+    $('treino-hoje').innerHTML = `<button class="btn" onclick="abrirAvisoTreino()">🏋️ REGISTRAR TREINO (+${PONTOS_TREINO} XP)</button>
+      <div style="color:var(--texto2);font-size:12px;margin-top:8px;text-align:center">Manda a foto da prova no Whats do Lucas. Vale XP depois que ele validar.</div>`;
   } else if (treinoHoje.status === 'pendente') {
-    $('treino-hoje').innerHTML = `<div style="text-align:center;padding:6px 0"><span class="chip pendente">⏳ aguardando o Lucas validar</span><div style="color:var(--texto2);font-size:13px;margin-top:10px">Prova enviada! Já já cai teu XP. 💪</div></div>`;
+    $('treino-hoje').innerHTML = `<div style="text-align:center;padding:6px 0"><span class="chip pendente">⏳ aguardando o Lucas validar</span><div style="color:var(--texto2);font-size:13px;margin-top:10px">Marcou! Manda a foto no Whats que já cai teu XP. 💪</div></div>`;
   } else {
     $('treino-hoje').innerHTML = `<div style="text-align:center;padding:6px 0"><span class="chip aprovado">✔ treino de hoje validado</span><div style="color:var(--texto2);font-size:13px;margin-top:10px">+${treinoHoje.pontos} XP no bolso. Te vejo amanhã!</div></div>`;
   }
@@ -618,7 +600,7 @@ function desenharJogo(){
   $('lista-missoes').innerHTML = missoes.map(m => {
     const feita = meusCheckins.find(c => c.tipo==='missao' && c.detalhe===m.titulo && inicioSemana(c.data)===sem && c.status!=='rejeitado');
     let acao;
-    if (!feita) acao = `<button class="btn mini" style="margin-top:10px" onclick="abrirModalMissao(${m.id})">CONCLUIR MISSÃO 🎯</button>`;
+    if (!feita) acao = `<button class="btn mini" style="margin-top:10px" onclick="abrirAvisoMissao(${m.id})">CONCLUIR MISSÃO 🎯</button>`;
     else if (feita.status==='pendente') acao = `<div style="margin-top:10px"><span class="chip pendente">⏳ em validação</span></div>`;
     else acao = `<div style="margin-top:10px"><span class="chip aprovado">✔ missão cumprida</span></div>`;
     return `<div style="padding:4px 0">
@@ -658,99 +640,46 @@ async function marcarHabito(id){
   } catch(e){ toast('Erro: ' + e.message) }
 }
 
-/* ===== hábito que precisa de prova no WhatsApp ===== */
-let habitoPendente = null;
-function abrirAvisoHabito(h){
-  habitoPendente = h;
-  $('aviso-titulo').textContent = h.emoji + ' ' + h.nome;
-  $('aviso-texto').textContent = h.aviso || 'Manda a prova no meu WhatsApp que eu valido. Até lá fica pendente.';
+/* ===== prova por WhatsApp (treino, missão e hábito) ===== */
+let avisoCtx = null; // {tipo, detalhe, pontos}
+function abrirAviso(ctx, titulo, texto){
+  avisoCtx = ctx;
+  $('aviso-titulo').textContent = titulo;
+  $('aviso-texto').textContent = texto;
   const link = $('aviso-whats');
   if (WHATSAPP) {
-    const msg = encodeURIComponent('Oi Lucas! Prova do hábito "' + h.nome + '" — ' + (aluno ? aluno.nome : ''));
+    const rotulo = {treino:'do treino de hoje', missao:'da missão "'+ctx.detalhe+'"', habito:'do hábito "'+ctx.detalhe+'"'}[ctx.tipo] || '';
+    const msg = encodeURIComponent('Oi Lucas! Segue a prova ' + rotulo + '. Sou ' + (aluno ? aluno.nome : '') + ' 💪');
     link.href = 'https://wa.me/' + WHATSAPP + '?text=' + msg;
     link.classList.remove('hidden');
   } else { link.classList.add('hidden'); }
   $('modal-aviso').classList.remove('hidden');
 }
-function fecharAviso(){ $('modal-aviso').classList.add('hidden'); habitoPendente=null; }
-async function confirmarHabitoPendente(){
-  const h = habitoPendente; if(!h) return;
+function abrirAvisoHabito(h){
+  abrirAviso({tipo:'habito', detalhe:h.nome, pontos:h.pontos}, h.emoji + ' ' + h.nome,
+    h.aviso || 'Manda a prova no meu WhatsApp que eu valido. Até lá fica pendente.');
+}
+function abrirAvisoTreino(){
+  abrirAviso({tipo:'treino', detalhe:'Treino do dia', pontos:PONTOS_TREINO}, '🏋️ Prova do treino',
+    'Faz o treino e manda a foto (academia, espelho, aparelho, o que provar) no meu WhatsApp. Vale +' + PONTOS_TREINO + ' XP e fica pendente até eu validar.');
+}
+function abrirAvisoMissao(id){
+  const m = missoes.find(x=>x.id===id); if(!m) return;
+  abrirAviso({tipo:'missao', detalhe:m.titulo, pontos:m.pontos}, '🎯 ' + m.titulo,
+    'Manda a foto que comprova a missão no meu WhatsApp. Vale +' + m.pontos + ' XP e fica pendente até eu validar.');
+}
+function fecharAviso(){ $('modal-aviso').classList.add('hidden'); avisoCtx=null; }
+async function confirmarPendente(){
+  const c = avisoCtx; if(!c) return;
   try {
     await api('/rest/v1/checkins', {method:'POST', body: JSON.stringify({
-      aluno_id: aluno.id, tipo:'habito', detalhe: h.nome, pontos: h.pontos, status:'pendente', data: hojeISO()
+      aluno_id: aluno.id, tipo: c.tipo, detalhe: c.detalhe, pontos: c.pontos, status:'pendente', data: hojeISO()
     })});
     fecharAviso();
-    toast('Marcado! Agora manda a prova no Whats que o Lucas valida. ⏳');
+    toast('Marcado! Agora manda a prova no meu Whats que eu valido. ⏳');
+    if (typeof fbq === 'function') fbq('trackCustom', 'CheckinJogo', {tipo: c.tipo});
     carregarJogo();
   } catch(e){ toast('Erro: ' + e.message) }
-}
-
-/* ================== MODAL FOTO ================== */
-function abrirModalTreino(){
-  modalCtx = {tipo:'treino', detalhe:'Treino do dia', pontos:PONTOS_TREINO, blob:null};
-  $('modal-titulo').textContent = 'Prova do treino 📸';
-  $('modal-sub').textContent = 'Manda uma foto sua na academia, do espelho, do aparelho, do que provar que o treino aconteceu. O Lucas confere e libera o XP.';
-  abrirModal();
-}
-function abrirModalMissao(id){
-  const m = missoes.find(x=>x.id===id); if(!m) return;
-  modalCtx = {tipo:'missao', detalhe:m.titulo, pontos:m.pontos, blob:null};
-  $('modal-titulo').textContent = 'Prova da missão 🎯';
-  $('modal-sub').textContent = '"' + m.titulo + '" vale +' + m.pontos + ' XP. Manda a foto que comprova e o Lucas valida.';
-  abrirModal();
-}
-function abrirModal(){
-  $('foto-prev').classList.add('hidden');
-  $('foto-drop').classList.remove('hidden');
-  $('btn-enviar').disabled = true;
-  $('input-foto').value = '';
-  $('modal-foto').classList.remove('hidden');
-}
-function fecharModal(){ $('modal-foto').classList.add('hidden'); modalCtx=null }
-
-$('input-foto').addEventListener('change', function(){
-  const f = this.files[0]; if(!f) return;
-  const img = new Image();
-  img.onload = function(){
-    const MAX = 1280;
-    let w = img.width, h = img.height;
-    if (Math.max(w,h) > MAX) { const k = MAX/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
-    const cv = document.createElement('canvas'); cv.width=w; cv.height=h;
-    cv.getContext('2d').drawImage(img,0,0,w,h);
-    cv.toBlob(b => {
-      modalCtx.blob = b;
-      $('foto-prev').src = URL.createObjectURL(b);
-      $('foto-prev').classList.remove('hidden');
-      $('foto-drop').classList.add('hidden');
-      $('btn-enviar').disabled = false;
-    }, 'image/jpeg', .8);
-    URL.revokeObjectURL(img.src);
-  };
-  img.src = URL.createObjectURL(f);
-});
-
-async function enviarCheckin(){
-  if (!modalCtx || !modalCtx.blob) return;
-  const btn = $('btn-enviar'); btn.disabled = true; btn.textContent = 'ENVIANDO...';
-  try {
-    const caminho = aluno.id + '/' + Date.now() + '.jpg';
-    const up = await fetch(SUPA + '/storage/v1/object/provas/' + caminho, {
-      method:'POST',
-      headers:{ 'apikey':ANON, 'Authorization':'Bearer '+ANON, 'Content-Type':'image/jpeg' },
-      body: modalCtx.blob
-    });
-    if (!up.ok) throw new Error('falha no upload da foto');
-    const fotoUrl = SUPA + '/storage/v1/object/public/provas/' + caminho;
-    await api('/rest/v1/checkins', {method:'POST', body: JSON.stringify({
-      aluno_id: aluno.id, tipo: modalCtx.tipo, detalhe: modalCtx.detalhe,
-      pontos: modalCtx.pontos, status:'pendente', foto_url: fotoUrl, data: hojeISO()
-    })});
-    fecharModal();
-    toast('Prova enviada! O Lucas vai validar. 🔍');
-    if (typeof fbq === 'function') fbq('trackCustom', 'CheckinJogo', {tipo: 'checkin'});
-    carregarJogo();
-  } catch(e){ toast('Erro: ' + e.message) }
-  btn.textContent = 'ENVIAR PRA VALIDAÇÃO'; btn.disabled = false;
 }
 
 /* ================== PAINEL DO TREINADOR ================== */
