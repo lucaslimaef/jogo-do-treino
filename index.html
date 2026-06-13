@@ -240,13 +240,10 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
     </div>
     <div class="card">
       <h3>Quem está treinando?</h3>
-      <div id="lista-alunos" class="lista-alunos"></div>
-    </div>
-    <div class="card">
-      <h3>Primeira vez aqui?</h3>
-      <input type="text" id="novo-nome" placeholder="Seu nome" maxlength="40">
+      <input type="text" id="novo-nome" placeholder="Digite seu nome" maxlength="40" autocomplete="off">
       <div style="height:10px"></div>
-      <button class="btn" onclick="criarAluno()">COMEÇAR O JOGO</button>
+      <button class="btn" onclick="entrarNoJogo()">ENTRAR NO JOGO</button>
+      <div style="color:var(--texto2);font-size:12px;margin-top:10px;text-align:center">Digite sempre do mesmo jeito pra cair no seu progresso. Fica salvo no seu celular.</div>
     </div>
     <div class="rodape">Jogo dos alunos do Lucas Lima · @personaltrainerlucaslima</div>
   </div>
@@ -334,7 +331,7 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
       <div class="card"><h3>Aguardando validação</h3><div id="painel-pendentes"></div></div>
     </div>
     <div id="aba-alunos" class="hidden">
-      <div class="card"><h3>Visão geral dos atletas</h3><div id="painel-alunos"></div></div>
+      <div class="card"><h3>🏆 Ranking dos atletas</h3><div id="painel-alunos"></div></div>
     </div>
     <div id="aba-missoes" class="hidden">
       <div class="card"><h3>Nova missão da semana</h3>
@@ -358,6 +355,10 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
           <input type="number" id="h-pontos" placeholder="XP" value="5" style="width:90px">
           <button class="btn mini" onclick="criarHabito()">CRIAR</button>
         </div>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer;font-size:13px;color:var(--texto2)">
+          <input type="checkbox" id="h-valida" style="width:auto"> Precisa mandar foto/prova no meu WhatsApp (fica pendente até eu validar)
+        </label>
+        <textarea id="h-aviso" rows="2" placeholder="Aviso pro aluno (opcional). Ex: manda a foto do relógio no meu Whats." style="margin-top:8px"></textarea>
       </div>
       <div class="card"><h3>Hábitos</h3><div id="painel-habitos"></div></div>
     </div>
@@ -380,6 +381,19 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
     </div>
   </div>
 
+  <!-- ===================== MODAL AVISO (hábito por WhatsApp) ===================== -->
+  <div id="modal-aviso" class="modal-bg hidden">
+    <div class="modal">
+      <h2 id="aviso-titulo">Hábito</h2>
+      <p id="aviso-texto"></p>
+      <a id="aviso-whats" class="btn verde hidden" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">📲 ABRIR MEU WHATSAPP</a>
+      <div style="height:8px"></div>
+      <button class="btn" onclick="confirmarHabitoPendente()">JÁ VOU MANDAR, DEIXAR PENDENTE</button>
+      <div style="height:8px"></div>
+      <button class="btn fant" onclick="fecharAviso()">Cancelar</button>
+    </div>
+  </div>
+
 </div>
 <div id="toast"></div>
 
@@ -387,6 +401,7 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
 /* ================== CONFIG ================== */
 const SUPA = 'https://tgmzleagedfjvyadkgbq.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnbXpsZWFnZWRmanZ5YWRrZ2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODc2MjMsImV4cCI6MjA5Njg2MzYyM30.BSd_lUTcJy2EQh8s312I4uX9vQdxgGlEXF7o6bHxGj4';
+const WHATSAPP = ''; // número do Lucas com código do país, só dígitos (ex: 351912345678). Vazio = aviso sem botão.
 const PONTOS_TREINO = 20;
 const META_SEMANA = 3;
 const NIVEIS = [
@@ -462,39 +477,25 @@ async function iniciar(){
     carregarJogo();
   } else {
     mostrarTela('tela-entrada');
-    carregarEntrada();
   }
 }
 window.addEventListener('hashchange', iniciar);
 
-async function carregarEntrada(){
-  try {
-    const alunos = await api('/rest/v1/alunos?select=id,nome&order=nome.asc');
-    $('lista-alunos').innerHTML = alunos.length
-      ? alunos.map(a => `<button class="aluno-btn" onclick='escolherAluno(${JSON.stringify(JSON.stringify(a))})'>💪 ${esc(a.nome)}</button>`).join('')
-      : '<div style="color:var(--texto2);font-size:14px">Ainda não tem ninguém jogando. Seja o primeiro! 👇</div>';
-  } catch(e){ toast('Erro ao carregar: ' + e.message) }
-}
-function escolherAluno(json){
-  aluno = JSON.parse(json);
-  localStorage.setItem('euvseu_aluno', JSON.stringify(aluno));
-  mostrarTela('tela-jogo'); carregarJogo();
-}
-async function criarAluno(){
+async function entrarNoJogo(){
   const nome = $('novo-nome').value.trim();
   if (!nome) return toast('Escreve seu nome primeiro 😉');
   try {
-    const r = await api('/rest/v1/alunos', {
-      method:'POST', headers:{'Prefer':'return=representation'},
-      body: JSON.stringify({nome})
-    });
-    escolherAluno(JSON.stringify({id:r[0].id, nome:r[0].nome}));
-    toast('Bem-vindo ao jogo, ' + nome + '! 🎮');
+    const r = await rpc('entrar_ou_criar_aluno', {p_nome: nome});
+    aluno = {id: r[0].id, nome: r[0].nome};
+    localStorage.setItem('euvseu_aluno', JSON.stringify(aluno));
+    mostrarTela('tela-jogo'); carregarJogo();
+    toast('Bora jogar, ' + aluno.nome + '! 🎮');
   } catch(e){ toast('Erro: ' + e.message) }
 }
 function sairAluno(){
   localStorage.removeItem('euvseu_aluno'); aluno=null;
-  mostrarTela('tela-entrada'); carregarEntrada();
+  $('novo-nome').value='';
+  mostrarTela('tela-entrada');
 }
 
 /* ================== JOGO DO ALUNO ================== */
@@ -588,12 +589,27 @@ function desenharJogo(){
   }
 
   // hábitos de hoje
-  const feitosHoje = new Set(meusCheckins.filter(c=>c.tipo==='habito' && c.data===hoje).map(c=>c.detalhe));
+  const habHoje = {};
+  meusCheckins.filter(c=>c.tipo==='habito' && c.data===hoje && c.status!=='rejeitado').forEach(c => habHoje[c.detalhe]=c);
   $('lista-habitos').innerHTML = habitos.map(h => {
-    const feito = feitosHoje.has(h.nome);
-    return `<div class="habito ${feito?'feito':''}" onclick="${feito?'':'marcarHabito('+h.id+')'}">
+    const reg = habHoje[h.nome];
+    if (reg && reg.status==='pendente') {
+      return `<div class="habito feito">
+        <div class="check" style="border-color:var(--amarelo);background:rgba(251,191,36,.12);color:var(--amarelo)">⏳</div>
+        <div class="h-nome">${h.emoji} ${esc(h.nome)}</div>
+        <div class="h-pts" style="color:var(--amarelo)">pendente</div>
+      </div>`;
+    }
+    if (reg) {
+      return `<div class="habito feito">
+        <div class="check">✔</div>
+        <div class="h-nome">${h.emoji} ${esc(h.nome)}</div>
+        <div class="h-pts">+${h.pontos} XP</div>
+      </div>`;
+    }
+    return `<div class="habito" onclick="marcarHabito(${h.id})">
       <div class="check">✔</div>
-      <div class="h-nome">${h.emoji} ${esc(h.nome)}</div>
+      <div class="h-nome">${h.emoji} ${esc(h.nome)}${h.requer_validacao?' <span style="color:var(--texto2);font-size:11px">📱 prova no Whats</span>':''}</div>
       <div class="h-pts">+${h.pontos} XP</div>
     </div>`;
   }).join('') || '<div style="color:var(--texto2);font-size:13px">Sem hábitos cadastrados ainda.</div>';
@@ -632,11 +648,39 @@ function desenharJogo(){
 
 async function marcarHabito(id){
   const h = habitos.find(x=>x.id===id); if(!h) return;
+  if (h.requer_validacao) { abrirAvisoHabito(h); return; }
   try {
     await api('/rest/v1/checkins', {method:'POST', body: JSON.stringify({
       aluno_id: aluno.id, tipo:'habito', detalhe: h.nome, pontos: h.pontos, status:'aprovado', data: hojeISO()
     })});
     toast('+' + h.pontos + ' XP! ' + h.emoji + ' Hábito registrado.');
+    carregarJogo();
+  } catch(e){ toast('Erro: ' + e.message) }
+}
+
+/* ===== hábito que precisa de prova no WhatsApp ===== */
+let habitoPendente = null;
+function abrirAvisoHabito(h){
+  habitoPendente = h;
+  $('aviso-titulo').textContent = h.emoji + ' ' + h.nome;
+  $('aviso-texto').textContent = h.aviso || 'Manda a prova no meu WhatsApp que eu valido. Até lá fica pendente.';
+  const link = $('aviso-whats');
+  if (WHATSAPP) {
+    const msg = encodeURIComponent('Oi Lucas! Prova do hábito "' + h.nome + '" — ' + (aluno ? aluno.nome : ''));
+    link.href = 'https://wa.me/' + WHATSAPP + '?text=' + msg;
+    link.classList.remove('hidden');
+  } else { link.classList.add('hidden'); }
+  $('modal-aviso').classList.remove('hidden');
+}
+function fecharAviso(){ $('modal-aviso').classList.add('hidden'); habitoPendente=null; }
+async function confirmarHabitoPendente(){
+  const h = habitoPendente; if(!h) return;
+  try {
+    await api('/rest/v1/checkins', {method:'POST', body: JSON.stringify({
+      aluno_id: aluno.id, tipo:'habito', detalhe: h.nome, pontos: h.pontos, status:'pendente', data: hojeISO()
+    })});
+    fecharAviso();
+    toast('Marcado! Agora manda a prova no Whats que o Lucas valida. ⏳');
     carregarJogo();
   } catch(e){ toast('Erro: ' + e.message) }
 }
@@ -736,12 +780,14 @@ async function carregarPainel(){
   timerPainel = setInterval(carregarPainel, 30000);
   try {
     const [pend, alunos, todos, miss, habs] = await Promise.all([
-      api('/rest/v1/checkins?status=eq.pendente&select=*,alunos(nome)&order=criado_em.asc'),
-      api('/rest/v1/alunos?select=*&order=nome.asc'),
+      api('/rest/v1/checkins?status=eq.pendente&select=*&order=criado_em.asc'),
+      rpc('listar_alunos', {p_chave: chave()}),
       api('/rest/v1/checkins?select=aluno_id,tipo,pontos,status,data&limit=3000'),
       api('/rest/v1/missoes?select=*&order=id.desc'),
       api('/rest/v1/habitos?select=*&order=id.asc'),
     ]);
+    const nomePorId = {}; alunos.forEach(a => nomePorId[a.id]=a.nome);
+    pend.forEach(c => c._nome = nomePorId[c.aluno_id] || '?');
     desenharPainel(pend, alunos, todos, miss, habs);
   } catch(e){ toast('Erro: ' + e.message) }
 }
@@ -755,7 +801,7 @@ function desenharPainel(pend, alunos, todos, miss, habs){
       <div style="display:flex;gap:10px;align-items:center">
         ${c.foto_url ? `<img class="foto-mini" src="${c.foto_url}" onclick="window.open('${c.foto_url}','_blank')">` : `<div class="r-ico" style="font-size:26px">${icones[c.tipo]}</div>`}
         <div style="flex:1;min-width:0">
-          <b>${esc(c.alunos ? c.alunos.nome : '?')}</b>
+          <b>${esc(c._nome || '?')}</b>
           <div style="color:var(--texto2);font-size:12px">${icones[c.tipo]} ${esc(c.detalhe||c.tipo)} · ${dataBR(c.data)} · +${c.pontos} XP</div>
         </div>
       </div>
@@ -766,26 +812,30 @@ function desenharPainel(pend, alunos, todos, miss, habs){
     </div>`).join('')
     : '<div style="color:var(--texto2);font-size:14px">Nada pra validar agora. 🧘</div>';
 
-  // visão geral
-  $('painel-alunos').innerHTML = alunos.length ? alunos.map(a => {
+  // ranking (ordenado por XP)
+  const sem = inicioSemana(hojeISO());
+  const ranking = alunos.map(a => {
     const meus = todos.filter(c => c.aluno_id===a.id && c.status==='aprovado');
     const xp = meus.reduce((s,c)=>s+c.pontos,0);
     let nivel = NIVEIS[0]; NIVEIS.forEach(n => { if (xp>=n.xp) nivel=n });
-    const sem = inicioSemana(hojeISO());
     const treinosSem = meus.filter(c=>c.tipo==='treino' && inicioSemana(c.data)===sem).length;
-    // streak
     const porSemana = {};
     meus.filter(c=>c.tipo==='treino').forEach(c => { const s=inicioSemana(c.data); porSemana[s]=(porSemana[s]||0)+1 });
     let streak=0, s2=sem;
     if ((porSemana[s2]||0)>=META_SEMANA) streak++;
     s2 = semanaAnterior(s2);
     while((porSemana[s2]||0)>=META_SEMANA){ streak++; s2=semanaAnterior(s2) }
-    return `<div class="aluno-resumo">
-      <div class="ar-badge">${nivel.icone}</div>
-      <div class="ar-info"><b>${esc(a.nome)}</b><span>${nivel.nome} · 🔥 ${streak} sem · 🏋️ ${treinosSem}/${META_SEMANA} essa semana</span></div>
-      <div class="ar-pts">${xp} XP</div>
-    </div>`;
-  }).join('') : '<div style="color:var(--texto2);font-size:14px">Nenhum atleta ainda. Manda o link pra turma!</div>';
+    return {a, xp, nivel, treinosSem, streak};
+  }).sort((x,y) => y.xp - x.xp);
+  const medalhaPos = ['🥇','🥈','🥉'];
+  $('painel-alunos').innerHTML = ranking.length ? ranking.map((r,i) => `
+    <div class="aluno-resumo">
+      <div class="ar-badge" style="font-size:18px;width:30px;text-align:center">${medalhaPos[i]||('<span style=\'color:var(--texto2);font-size:15px\'>'+(i+1)+'º</span>')}</div>
+      <div class="ar-badge">${r.nivel.icone}</div>
+      <div class="ar-info"><b>${esc(r.a.nome)}</b><span>${r.nivel.nome} · 🔥 ${r.streak} sem · 🏋️ ${r.treinosSem}/${META_SEMANA} essa semana</span></div>
+      <div class="ar-pts">${r.xp} XP</div>
+      <button class="btn mini verm" style="padding:7px 9px;flex:none" onclick="excluirAluno('${r.a.id}','${esc(r.a.nome).replace(/'/g,"\\'")}')">🗑</button>
+    </div>`).join('') : '<div style="color:var(--texto2);font-size:14px">Nenhum atleta ainda. Manda o link pra turma!</div>';
 
   // missões
   $('painel-missoes').innerHTML = miss.map(m => `
@@ -796,9 +846,10 @@ function desenharPainel(pend, alunos, todos, miss, habs){
 
   // hábitos
   $('painel-habitos').innerHTML = habs.map(h => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(44,27,82,.5)">
-      <div style="flex:1;min-width:0;${h.ativo?'':'opacity:.4'}"><b>${h.emoji} ${esc(h.nome)}</b><div style="color:var(--texto2);font-size:12px">+${h.pontos} XP por dia</div></div>
-      <button class="btn mini ${h.ativo?'verm':'verde'}" onclick="alternarHabito(${h.id},${!h.ativo})">${h.ativo?'PAUSAR':'ATIVAR'}</button>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(44,27,82,.5)">
+      <div style="flex:1;min-width:0;${h.ativo?'':'opacity:.4'}"><b>${h.emoji} ${esc(h.nome)}</b><div style="color:var(--texto2);font-size:12px">+${h.pontos} XP${h.requer_validacao?' · 📱 valida no Whats':' · na hora'}</div></div>
+      <button class="btn mini ${h.ativo?'verm':'verde'}" style="padding:9px 11px" onclick="alternarHabito(${h.id},${!h.ativo})">${h.ativo?'PAUSAR':'ATIVAR'}</button>
+      <button class="btn mini verm" style="padding:9px;flex:none" onclick="excluirHabito(${h.id},'${esc(h.nome).replace(/'/g,"\\'")}')">🗑</button>
     </div>`).join('') || '<div style="color:var(--texto2);font-size:14px">Nenhum hábito criado.</div>';
 }
 
@@ -820,12 +871,22 @@ async function alternarMissao(id, ativa){
 }
 async function criarHabito(){
   const n = $('h-nome').value.trim(); if(!n) return toast('Dá um nome pro hábito.');
-  try { await rpc('salvar_habito', {p_nome:n, p_emoji:$('h-emoji').value.trim()||'✅', p_pontos:parseInt($('h-pontos').value)||5, p_chave:chave()});
-    $('h-nome').value=''; $('h-emoji').value=''; toast('Hábito criado! ✅'); carregarPainel();
+  try { await rpc('salvar_habito', {p_nome:n, p_emoji:$('h-emoji').value.trim()||'✅', p_pontos:parseInt($('h-pontos').value)||5, p_requer_validacao:$('h-valida').checked, p_aviso:$('h-aviso').value.trim()||null, p_chave:chave()});
+    $('h-nome').value=''; $('h-emoji').value=''; $('h-aviso').value=''; $('h-valida').checked=false; toast('Hábito criado! ✅'); carregarPainel();
   } catch(e){ toast('Erro: ' + e.message) }
 }
 async function alternarHabito(id, ativo){
   try { await rpc('alternar_habito', {p_id:id, p_ativo:ativo, p_chave:chave()}); carregarPainel() }
+  catch(e){ toast('Erro: ' + e.message) }
+}
+async function excluirHabito(id, nome){
+  if (!confirm('Excluir o hábito "' + nome + '" de vez? Não dá pra desfazer.')) return;
+  try { await rpc('remover_habito', {p_id:id, p_chave:chave()}); toast('Hábito excluído.'); carregarPainel() }
+  catch(e){ toast('Erro: ' + e.message) }
+}
+async function excluirAluno(id, nome){
+  if (!confirm('Excluir o atleta "' + nome + '" e TODO o histórico dele? Não dá pra desfazer.')) return;
+  try { await rpc('remover_aluno', {p_id:id, p_chave:chave()}); toast('Atleta excluído.'); carregarPainel() }
   catch(e){ toast('Erro: ' + e.message) }
 }
 
