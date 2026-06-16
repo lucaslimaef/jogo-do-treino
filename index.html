@@ -986,7 +986,17 @@ async function criarHabito(){
   const n = $('h-nome').value.trim(); if(!n) return toast('Dá um nome pro hábito.');
   const unidade = $('h-unidade').value.trim();
   const modo = unidade ? 'quantidade' : 'simples';
-  try { await rpc('salvar_habito', {p_nome:n, p_emoji:$('h-emoji').value.trim()||'✅', p_pontos:parseInt($('h-pontos').value)||5, p_requer_validacao:$('h-valida').checked, p_aviso:$('h-aviso').value.trim()||null, p_modo:modo, p_unidade:unidade||null, p_chave:chave()});
+  const base = {p_nome:n, p_emoji:$('h-emoji').value.trim()||'✅', p_pontos:parseInt($('h-pontos').value)||5, p_requer_validacao:$('h-valida').checked, p_aviso:$('h-aviso').value.trim()||null, p_chave:chave()};
+  try {
+    try {
+      await rpc('salvar_habito', Object.assign({}, base, {p_modo:modo, p_unidade:unidade||null}));
+    } catch(e){
+      // banco ainda sem o campo de unidade (atualização do Supabase não rodada)
+      if (/Could not find the function|PGRST202/.test(e.message)) {
+        if (unidade) { toast('Pra hábito por unidade, falta rodar a atualização do banco no Supabase 🛠️'); return; }
+        await rpc('salvar_habito', base); // hábito normal funciona do mesmo jeito
+      } else { throw e; }
+    }
     $('h-nome').value=''; $('h-emoji').value=''; $('h-aviso').value=''; $('h-unidade').value=''; $('h-valida').checked=false; atualizaLabelXp(); toast('Hábito criado! ✅'); carregarPainel();
   } catch(e){ toast('Erro: ' + e.message) }
 }
