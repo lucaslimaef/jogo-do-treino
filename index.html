@@ -222,6 +222,65 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
 .rodape{color:var(--texto2);text-align:center;font-size:11px;margin-top:26px;line-height:1.6}
 .rodape a{color:var(--roxo3);text-decoration:none}
 .atualizando{font-size:11px;color:var(--texto2);text-align:center;margin-top:10px}
+
+/* ============================================================
+   UPGRADE PREMIUM (skill redesign-existing-projects)
+   Camada só aditiva: não mexe em nenhuma regra acima nem no JS.
+   Mantém de propósito o roxo neon (identidade do Lucas).
+   ============================================================ */
+html{scroll-behavior:smooth}
+body{min-height:100dvh}                 /* corrige o "pulo" da barra no Safari do iPhone */
+
+/* grão sutil pra tirar o aspecto liso/digital demais */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  opacity:.06;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.wrap{position:relative;z-index:1}
+
+/* números alinhados (interface cheia de dados/XP) */
+.stat .val,.missao-pts,.ar-pts,.xp-num{font-variant-numeric:tabular-nums}
+
+/* sem palavra órfã sozinha na última linha */
+h1,h2,h3,.tag,.modal p{text-wrap:balance}
+
+/* transições suaves nos elementos clicáveis */
+.btn,.aluno-btn,.habito,.aba,.medalha{
+  transition:transform .15s ease, box-shadow .25s ease, border-color .2s ease, background .2s ease, filter .2s ease}
+
+/* hover (no celular não atrapalha; no desktop dá vida) */
+@media (hover:hover){
+  .btn:hover{filter:brightness(1.08);box-shadow:0 10px 32px rgba(124,58,237,.5)}
+  .btn.fant:hover{border-color:var(--roxo2);color:var(--texto);filter:none}
+  .btn.verde:hover{box-shadow:0 10px 30px rgba(52,211,153,.45)}
+  .btn.verm:hover{box-shadow:0 10px 30px rgba(248,113,113,.45)}
+  .aluno-btn:hover{border-color:var(--roxo2);background:var(--card)}
+  .habito:hover{border-color:var(--roxo2)}
+  .aba:hover{color:var(--texto);border-color:var(--roxo2)}
+  .medalha.ganha:hover{transform:translateY(-3px)}
+}
+
+/* foco visível pra quem navega no teclado (acessibilidade) */
+.btn:focus-visible,.aba:focus-visible,.aluno-btn:focus-visible,.habito:focus-visible{
+  outline:2px solid var(--ciano);outline-offset:3px}
+
+/* entrada em cascata: os blocos sobem um atrás do outro, não tudo de uma vez */
+@keyframes subirEntrada{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#tela-entrada>*,#tela-jogo>*,#tela-painel>*{animation:subirEntrada .5s cubic-bezier(.2,.8,.2,1) both}
+#tela-jogo>*:nth-child(2),#tela-painel>*:nth-child(2){animation-delay:.05s}
+#tela-jogo>*:nth-child(3),#tela-painel>*:nth-child(3){animation-delay:.10s}
+#tela-jogo>*:nth-child(4),#tela-painel>*:nth-child(4){animation-delay:.15s}
+#tela-jogo>*:nth-child(5){animation-delay:.20s}
+#tela-jogo>*:nth-child(6){animation-delay:.25s}
+#tela-jogo>*:nth-child(7){animation-delay:.30s}
+#tela-jogo>*:nth-child(n+8){animation-delay:.34s}
+
+/* respeita quem prefere menos movimento */
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
 </style>
 </head>
 <body>
