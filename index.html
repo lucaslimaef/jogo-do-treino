@@ -366,10 +366,13 @@ input:focus,textarea:focus{border-color:var(--roxo2)}
           <input type="text" id="h-emoji" placeholder="🙂" maxlength="4" style="width:64px;text-align:center">
           <input type="text" id="h-nome" placeholder="Nome do hábito">
         </div>
+        <input type="text" id="h-unidade" placeholder="Unidade: litro, km, copo… (vazio = hábito normal)" oninput="atualizaLabelXp()" style="margin-top:8px">
+        <div style="color:var(--texto2);font-size:11px;margin-top:6px;line-height:1.5">Preencheu a unidade? Vira hábito <b>por quantidade</b>: o aluno digita quanto fez e ganha o XP multiplicado. Ex: <b>3 XP por litro</b> → bebeu 2 litros, leva 6 XP.</div>
         <div class="linha-form">
           <input type="number" id="h-pontos" placeholder="XP" value="5" style="width:90px">
           <button class="btn mini" onclick="criarHabito()">CRIAR</button>
         </div>
+        <div id="h-xp-label" style="color:var(--roxo3);font-size:12px;margin-top:6px">XP fixo por marcar.</div>
         <label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer;font-size:13px;color:var(--texto2)">
           <input type="checkbox" id="h-valida" style="width:auto"> Precisa mandar foto/prova no meu WhatsApp (fica pendente até eu validar)
         </label>
@@ -615,7 +618,7 @@ function desenharJogo(){
   const checkinsHoje = meusCheckins.filter(c=>c.tipo==='habito' && c.data===hoje && c.status!=='rejeitado');
   $('lista-habitos').innerHTML = habitos.map(h => {
     const regs = checkinsHoje.filter(c => doHabito(c, h));
-    const sufixo = {hora:'/hora', 'mil passos':'/1.000 passos', foto:'/foto'}[h.unidade] || '';
+    const sufixo = {hora:'/hora', 'mil passos':'/1.000 passos', foto:'/foto'}[h.unidade] || (h.modo==='quantidade' && h.unidade ? '/'+esc(h.unidade) : '');
     const dica = h.requer_validacao ? ' <span style="color:var(--texto2);font-size:11px">📱 prova no Whats</span>' : '';
 
     // repetível (alimentação): sempre dá pra mandar mais
@@ -740,7 +743,7 @@ function abrirModalQtd(h){
   const cfg = {
     hora:        {titulo:'😴 Quantas horas você dormiu?', ph:'Ex: 8', sufixo:'horas', step:'0.5'},
     'mil passos':{titulo:'👟 Quantos passos você deu hoje?', ph:'Ex: 8000', sufixo:'passos', step:'100'}
-  }[h.unidade] || {titulo:h.nome, ph:'Quantidade', sufixo:'', step:'1'};
+  }[h.unidade] || {titulo:h.emoji + ' Quanto de ' + h.nome + '?', ph:'Ex: 2', sufixo:(h.unidade||''), step:'any'};
   $('qtd-titulo').textContent = cfg.titulo;
   $('qtd-sufixo').textContent = cfg.sufixo;
   $('qtd-input').value = '';
@@ -759,14 +762,28 @@ function previewQtd(){
   $('qtd-previa').textContent = (h && n>0) ? ('= ' + calcXpQtd(h, n) + ' XP') : '';
 }
 function fecharQtd(){ $('modal-qtd').classList.add('hidden'); qtdHabito=null; }
-function confirmarQtd(){
+async function confirmarQtd(){
   const h = qtdHabito; const n = parseFloat($('qtd-input').value);
   if (!h || !(n>0)) return toast('Coloca um número válido 😉');
   const xp = calcXpQtd(h, n);
-  if (xp <= 0) return toast('Precisa de pelo menos 1.000 passos pra contar.');
+  if (xp <= 0) return toast(h.unidade==='mil passos' ? 'Precisa de pelo menos 1.000 passos pra contar.' : 'Quantidade pequena demais pra valer XP 😉');
   const detalhe = h.unidade==='mil passos'
     ? h.nome + ' (' + Math.round(n).toLocaleString('pt-BR') + ')'
-    : h.nome + ' (' + n + 'h)';
+    : h.unidade==='hora'
+      ? h.nome + ' (' + n + 'h)'
+      : h.nome + ' (' + n + ' ' + (h.unidade||'') + ')';
+  // sem validação: cai na hora (igual a água). Com validação: vai pra prova no Whats.
+  if (!h.requer_validacao) {
+    try {
+      await api('/rest/v1/checkins', {method:'POST', body: JSON.stringify({
+        aluno_id: aluno.id, tipo:'habito', detalhe, pontos:xp, status:'aprovado', data: hojeISO()
+      })});
+      fecharQtd();
+      toast('+' + xp + ' XP! ' + h.emoji + ' Registrado.');
+      carregarJogo();
+    } catch(e){ toast('Erro: ' + e.message) }
+    return;
+  }
   fecharQtd();
   abrirAviso({tipo:'habito', detalhe, pontos:xp}, h.emoji + ' ' + detalhe,
     (h.aviso || 'Manda a prova no meu WhatsApp que eu valido. Fica pendente até lá.') + '\n\nVale ' + xp + ' XP.');
@@ -939,7 +956,7 @@ function desenharPainel(pend, alunos, todos, miss, habs){
   // hábitos
   $('painel-habitos').innerHTML = habs.map(h => `
     <div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(44,27,82,.5)">
-      <div style="flex:1;min-width:0;${h.ativo?'':'opacity:.4'}"><b>${h.emoji} ${esc(h.nome)}</b><div style="color:var(--texto2);font-size:12px">+${h.pontos} XP${h.requer_validacao?' · 📱 valida no Whats':' · na hora'}</div></div>
+      <div style="flex:1;min-width:0;${h.ativo?'':'opacity:.4'}"><b>${h.emoji} ${esc(h.nome)}</b><div style="color:var(--texto2);font-size:12px">+${h.pontos} XP${h.modo==='quantidade'&&h.unidade?'/'+esc(h.unidade):''}${h.requer_validacao?' · 📱 valida no Whats':' · na hora'}</div></div>
       <button class="btn mini ${h.ativo?'verm':'verde'}" style="padding:9px 11px" onclick="alternarHabito(${h.id},${!h.ativo})">${h.ativo?'PAUSAR':'ATIVAR'}</button>
       <button class="btn mini verm" style="padding:9px;flex:none" onclick="excluirHabito(${h.id},'${esc(h.nome).replace(/'/g,"\\'")}')">🗑</button>
     </div>`).join('') || '<div style="color:var(--texto2);font-size:14px">Nenhum hábito criado.</div>';
@@ -961,10 +978,16 @@ async function alternarMissao(id, ativa){
   try { await rpc('alternar_missao', {p_id:id, p_ativa:ativa, p_chave:chave()}); carregarPainel() }
   catch(e){ toast('Erro: ' + e.message) }
 }
+function atualizaLabelXp(){
+  const u = ($('h-unidade').value || '').trim();
+  $('h-xp-label').textContent = u ? ('XP por ' + u + ' (multiplica pela quantidade que o aluno fez).') : 'XP fixo por marcar.';
+}
 async function criarHabito(){
   const n = $('h-nome').value.trim(); if(!n) return toast('Dá um nome pro hábito.');
-  try { await rpc('salvar_habito', {p_nome:n, p_emoji:$('h-emoji').value.trim()||'✅', p_pontos:parseInt($('h-pontos').value)||5, p_requer_validacao:$('h-valida').checked, p_aviso:$('h-aviso').value.trim()||null, p_chave:chave()});
-    $('h-nome').value=''; $('h-emoji').value=''; $('h-aviso').value=''; $('h-valida').checked=false; toast('Hábito criado! ✅'); carregarPainel();
+  const unidade = $('h-unidade').value.trim();
+  const modo = unidade ? 'quantidade' : 'simples';
+  try { await rpc('salvar_habito', {p_nome:n, p_emoji:$('h-emoji').value.trim()||'✅', p_pontos:parseInt($('h-pontos').value)||5, p_requer_validacao:$('h-valida').checked, p_aviso:$('h-aviso').value.trim()||null, p_modo:modo, p_unidade:unidade||null, p_chave:chave()});
+    $('h-nome').value=''; $('h-emoji').value=''; $('h-aviso').value=''; $('h-unidade').value=''; $('h-valida').checked=false; atualizaLabelXp(); toast('Hábito criado! ✅'); carregarPainel();
   } catch(e){ toast('Erro: ' + e.message) }
 }
 async function alternarHabito(id, ativo){
